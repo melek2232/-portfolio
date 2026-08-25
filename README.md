@@ -37,9 +37,7 @@ Electrical engineering student at **ENIT** (École Nationale d'Ingénieurs de Tu
 
 ---
 
-## 📬 Contact
 
-*(Add your email / LinkedIn / GitHub links here)*
 
 ---
 <p align="center"><i>🚧 This portfolio is a work in progress — new projects added as they're completed.</i></p>
