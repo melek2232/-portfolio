@@ -33,7 +33,7 @@ Electrical engineering student at **ENIT** (École Nationale d'Ingénieurs de Tu
 
 | Project | Description | Docs |
 |---|---|---|
-| 🛒 [Intelligent Inventory & Logistics Cart System](docs/inventory-management-system/README.md) | CAD-designed cart with a Raspberry Pi verifier: barcode scanning + YOLOv8 reel detection cross-checked in real time | [→ details](main/projet_stage/README.md) |
+| 🛒 [Intelligent Inventory & Logistics Cart System](projet_stage/README.md) | CAD-designed cart with a Raspberry Pi verifier: barcode scanning + YOLOv8 reel detection cross-checked in real time | [→ details](projet_stage/README.md) |
 
 ---
 
