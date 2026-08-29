@@ -35,7 +35,7 @@ Electrical engineering student at **ENIT** (École Nationale d'Ingénieurs de Tu
 | Project | Description | Docs |
 |---|---|---|
 | 🛒 [Intelligent Inventory & Logistics Cart System](projet_stage/README.md) | CAD-designed cart with a Raspberry Pi verifier: barcode scanning + YOLOv8 reel detection cross-checked in real time | [→ details](projet_stage/README.md) |
-| ⚡ [Industrial Auto-Ranging Digital Voltmeter](industrial-voltmeter/README.md) | Arduino UNO + ADS1115 (16-bit ADC) + CD4051 multiplexer voltmeter with automatic range selection across 4 divider ratios (1:1 to 1:100), built during a SAGEMCOM internship | [→ details](industrial-voltmeter/README.md) |
+| ⚡ [Industrial Auto-Ranging Digital Voltmeter](/projet_stage_1er/README.md) | Arduino UNO + ADS1115 (16-bit ADC) + CD4051 multiplexer voltmeter with automatic range selection across 4 divider ratios (1:1 to 1:100), built during a SAGEMCOM internship | [→ details](projet_stage_1er/README.md) |
 
 ---
 
