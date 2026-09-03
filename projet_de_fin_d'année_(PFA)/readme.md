@@ -1,260 +1,443 @@
-
 # ⚡ Cable Cut Detection System
 
 > **Real-time embedded system for detecting cable interruption and triggering a local audible and visual alarm.**
 
+<p align="center">
+  <img src="images/final-prototype.png" width="600">
+</p>
+
+<p align="center">
+  <b>Final assembled prototype</b>
+</p>
+
+---
+
 ## 📌 Overview
 
-This project presents the **design, simulation, and implementation of an electronic cable-cut detection system** capable of continuously monitoring the integrity of a transmission cable.
+This project focuses on the **design, simulation, PCB development, and implementation of a cable-cut detection system** capable of continuously monitoring the integrity of a transmission cable.
 
-The system uses a **25 kHz supervision signal** transmitted through the monitored cable. As long as the cable remains intact, the receiver detects this signal. If the signal disappears beyond a defined threshold, the system interprets this condition as a cable interruption and activates a **buzzer and LED alarm**.
+The system uses a **25 kHz supervision signal** transmitted through the monitored cable. As long as the cable remains intact, the receiver detects the signal. When the signal disappears beyond a defined detection threshold, the system identifies a cable interruption and activates a **visual and audible alarm**.
 
-The system was designed to operate both **without the cable being energized and when the cable is under mains voltage**, while maintaining low power consumption for battery-powered operation.
-
----
-
-## 🎯 Project Objectives
-
-The main objectives were to:
-
-* Detect cable interruption automatically and in real time
-* Monitor the presence of a **25 kHz / 1 V supervision signal**
-* Distinguish the supervision signal from low-frequency disturbances
-* Minimize false alarms
-* Generate both **audible and visual alarms**
-* Reduce power consumption to preserve battery life
-* Develop a low-cost solution using commercially available components
-* Compare an analog/discrete architecture with a microcontroller-based architecture
+The system was designed to operate both **without the cable being energized and under mains voltage**, while maintaining low power consumption for battery-powered operation.
 
 ---
 
-## 🏗️ System Architecture
+## 🎯 Objectives
 
-The project was developed around two different architectures sharing the same input signal-conditioning stage.
+The main objectives of the project are:
 
-### Common Input Stage
+- Detect cable interruption automatically and in real time
+- Monitor the presence of a **25 kHz / 1 V supervision signal**
+- Filter unwanted low-frequency disturbances
+- Detect the disappearance of the supervision signal
+- Trigger a **buzzer and LED alarm**
+- Reduce false alarms
+- Limit energy consumption for battery operation
+- Design a low-cost solution using standard electronic components
+- Compare a discrete analog/digital solution with a microcontroller-based solution
+- Design and manufacture the corresponding PCB
+
+---
+
+# 🏗️ System Architecture
+
+The system was developed using two different detection architectures sharing the same signal-conditioning stage.
+
+### Common Signal-Conditioning Stage
 
 ```text
-              Monitored Cable
-                    │
-                    ▼
-             ┌─────────────┐
-             │  LC Filter  │
-             │    25 kHz   │
-             └──────┬──────┘
-                    │
-                    ▼
-             ┌─────────────┐
-             │  Greinacher │
-             │     ×4      │
-             └──────┬──────┘
-                    │
-             Conditioned Signal
-                    │
-             ┌──────┴──────┐
-             │             │
-             ▼             ▼
-      Analog Solution   PIC12F675
+                 MONITORED CABLE
+                        │
+                        ▼
+                ┌──────────────┐
+                │   LC FILTER  │
+                │     25 kHz   │
+                └───────┬──────┘
+                        │
+                        ▼
+                ┌──────────────┐
+                │  GREINACHER  │
+                │      ×4      │
+                └───────┬──────┘
+                        │
+                 Conditioned Signal
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+              ▼                   ▼
+       ANALOG SOLUTION      PIC12F675 SOLUTION
 ```
 
-The input stage consists of an **LC high-pass filter** followed by a **Greinacher voltage quadrupler**. The filter selects the useful 25 kHz signal while attenuating the 50 Hz mains component and other low-frequency disturbances.
+The input signal is first filtered using an **LC high-pass filter** and then passed through a **Greinacher voltage quadrupler**.
+
+The filter is designed to attenuate the 50 Hz component while allowing the 25 kHz supervision signal to pass.
 
 ---
 
 # 🔧 Solution 1 — Analog / Discrete Architecture
 
-The first implementation avoids a programmable microcontroller and uses standard analog and digital integrated circuits.
+The first solution implements the detection and alarm functions using standard analog and digital components without a programmable microcontroller.
+
+### Functional Chain
 
 ```text
 Cable
- │
- ▼
+  │
+  ▼
 LC 25 kHz Filter
- │
- ▼
+  │
+  ▼
 Greinacher ×4
- │
- ▼
+  │
+  ▼
 2N7000
- │
- ▼
+  │
+  ▼
 74HCT132
- │
- ▼
+  │
+  ▼
 TLC555
- │
- ▼
+  │
+  ▼
 2N2222
- │
- ├──────────► 🔊 Buzzer
- │
- └──────────► 💡 LED
+  │
+  ├──────────────► 🔊 Buzzer
+  │
+  └──────────────► 💡 LED
 ```
+
+### Complete Circuit
+
+<p align="center">
+  <img src="images/analog-schematic.png" width="950">
+</p>
+
+<p align="center">
+  <b>Complete analog/discrete detection circuit</b>
+</p>
 
 ### Main Components
 
-| Component     | Function                      |
-| ------------- | ----------------------------- |
-| LC Filter     | 25 kHz signal selection       |
-| Greinacher ×4 | Signal voltage multiplication |
-| 2N7000        | Signal detection              |
-| 74HCT132      | Logic / astable stage         |
-| TLC555        | Monostable timing             |
-| 2N2222        | Output switching              |
-| Buzzer        | Audible alarm                 |
-| LED           | Visual alarm                  |
-
-The analog architecture combines the **2N7000 → 74HCT132 → TLC555 → 2N2222** stages to detect the loss of the supervision signal and drive the alarm.
+| Component | Function |
+|---|---|
+| LC Filter | 25 kHz signal selection |
+| Greinacher ×4 | Voltage multiplication |
+| 2N7000 | Signal detection |
+| 74HCT132 | Logic / timing stage |
+| TLC555 | Monostable timing |
+| 2N2222 | Alarm output switching |
+| Buzzer | Audible alarm |
+| LED | Visual alarm |
 
 ---
 
 # 🧠 Solution 2 — PIC12F675 Embedded Architecture
 
-The second implementation integrates the detection and alarm-control logic into a **Microchip PIC12F675 microcontroller**.
+The second solution integrates the detection logic into a **PIC12F675 microcontroller**.
+
+The conditioned signal is stored using an RC stage and measured by the PIC's ADC. A programmable threshold determines whether the supervision signal is still present.
+
+### Functional Chain
 
 ```text
 Cable
- │
- ▼
+  │
+  ▼
 LC Filter
- │
- ▼
+  │
+  ▼
 Greinacher ×4
- │
- ▼
+  │
+  ▼
 RC Signal Memory
- │
- ▼
+  │
+  ▼
 Voltage Divider
- │
- ▼
+  │
+  ▼
 PIC12F675 ADC
- │
- ▼
+  │
+  ▼
 Threshold Detection
- │
- ▼
+  │
+  ▼
 2N2222
- │
- ├──────────► 🔊 Buzzer
- │
- └──────────► 💡 LED
+  │
+  ├──────────────► 🔊 Buzzer
+  │
+  └──────────────► 💡 LED
 ```
 
-The PIC continuously measures the conditioned signal through its ADC. A programmable threshold is then used to determine whether the cable is still transmitting the supervision signal.
+### Complete Schematic
 
-### Firmware
+<p align="center">
+  <img src="images/digital-schematic.png" width="950">
+</p>
 
-The firmware was developed in **XC8** and configures the PIC12F675 ADC to monitor the signal level.
-
-A detection threshold of **85 ADC counts** was used in the implementation.
+<p align="center">
+  <b>PIC12F675-based detection circuit</b>
+</p>
 
 ---
 
-# 📐 Key Design Parameters
+## 💻 Firmware
 
-### Supervision Signal
+The PIC12F675 firmware was developed using **XC8**.
 
-| Parameter |      Value |
-| --------- | ---------: |
+The microcontroller continuously measures the conditioned signal using its ADC and compares the measured value with a predefined threshold.
+
+The implemented detection threshold is:
+
+```text
+THRESHOLD = 85 ADC counts
+```
+
+Simplified detection logic:
+
+```text
+        ADC Measurement
+               │
+               ▼
+       Compare with threshold
+               │
+          ┌────┴────┐
+          │         │
+       Signal     Signal
+       Present     Absent
+          │         │
+          ▼         ▼
+        Normal     Alarm
+```
+
+---
+
+# 📐 Key Electrical Parameters
+
+## Supervision Signal
+
+| Parameter | Value |
+|---|---:|
 | Frequency | **25 kHz** |
-| Amplitude |    **1 V** |
+| Amplitude | **1 V** |
 
-### LC Filter
+## LC Filter
 
-| Parameter                   |          Value |
-| --------------------------- | -------------: |
-| C1                          |         100 nF |
-| C2                          |         100 nF |
-| Equivalent capacitance      |          50 nF |
-| Inductance                  |           1 mH |
+| Parameter | Value |
+|---|---:|
+| C1 | 100 nF |
+| C2 | 100 nF |
+| Equivalent capacitance | 50 nF |
+| Inductance | 1 mH |
 | Calculated cutoff frequency | **≈ 22.5 kHz** |
 
-The calculated cutoff frequency is close to the 25 kHz target, allowing the circuit to reject the 50 Hz power component while passing the supervision signal. Simulation confirmed this filtering behavior.
+The calculated cutoff frequency is close to the target supervision frequency of 25 kHz.
 
-### Greinacher Voltage Multiplier
+---
 
-The voltage multiplier consists of **two cascaded voltage doublers**, producing an ideal output approximately equal to:
+# ⚡ Greinacher Voltage Quadrupler
+
+The signal-conditioning stage uses a **Greinacher ×4 voltage multiplier**.
+
+The circuit is constructed from two cascaded voltage-doubling stages.
+
+Ideally:
 
 ```text
 Vout ≈ 4 × Vpeak
 ```
 
-Schottky diodes were selected to reduce the voltage losses associated with diode forward voltage.
+In the practical circuit, **Schottky diodes** were used to reduce voltage losses caused by diode forward voltage.
 
 ---
 
-# 💻 Technologies & Tools
+# 🖥️ PCB Design
+
+The PCB was designed using **KiCad**, starting from the electrical schematic and progressing to PCB routing and 3D visualization.
+
+## PCB Layout
+
+<p align="center">
+  <img src="images/digital-pcb.png" width="950">
+</p>
+
+<p align="center">
+  <b>PCB layout designed with KiCad</b>
+</p>
+
+## 3D PCB Model
+
+<p align="center">
+  <img src="images/digital-pcb-3d.png" width="700">
+</p>
+
+<p align="center">
+  <b>3D visualization of the PCB</b>
+</p>
+
+The PCB design includes:
+
+- PIC12F675
+- Signal-conditioning stage
+- Voltage multiplier
+- Protection circuitry
+- Alarm driver
+- Power supply connections
+- ICSP programming interface
+- Mounting holes
+
+---
+
+# 🔬 Final Hardware
+
+After schematic design, simulation, PCB design, and fabrication, the system was assembled as a physical prototype.
+
+<p align="center">
+  <img src="images/final-prototype.png" width="600">
+</p>
+
+<p align="center">
+  <b>Final assembled electronic board</b>
+</p>
+
+The prototype demonstrates the transition from the theoretical design to a physical hardware implementation.
+
+---
+
+# 📈 Experimental Measurement
+
+Experimental measurements were performed to verify the behavior of the designed circuit.
+
+### Oscilloscope Measurement
+
+<p align="center">
+  <img src="images/oscilloscope.png" width="950">
+</p>
+
+<p align="center">
+  <b>Oscilloscope measurement of the capacitor discharge</b>
+</p>
+
+The RC memory stage was analyzed theoretically and experimentally.
+
+| Parameter | Theoretical | Measured |
+|---|---:|---:|
+| Discharge time | 402.4 s | 120 s |
+| Time constant τ | 206.8 s | 61.7 s |
+| Equivalent resistance | 440 kΩ | 131 kΩ |
+
+The difference between theoretical and measured values is attributed to real-world effects such as component tolerances, capacitor leakage, input resistance of the following stage, and diode characteristics.
+
+---
+
+# 🧪 Development Workflow
+
+The project followed a complete electronics development workflow:
+
+```text
+        Problem Definition
+                │
+                ▼
+          System Design
+                │
+                ▼
+       Analytical Calculations
+                │
+                ▼
+        Circuit Simulation
+        ┌───────┴────────┐
+        │                │
+       PSIM            PSpice
+        │                │
+        └───────┬────────┘
+                ▼
+          KiCad Design
+                │
+                ▼
+           PCB Routing
+                │
+                ▼
+         PCB Fabrication
+                │
+                ▼
+          Hardware Assembly
+                │
+                ▼
+      Experimental Validation
+```
+
+---
+
+# 🛠️ Technologies & Tools
 
 ### Electronics
 
-* Analog electronics
-* Digital electronics
-* Signal conditioning
-* LC filtering
-* Voltage multipliers
-* Transistor switching
-* ADC measurement
-* Battery-powered embedded systems
+- Analog Electronics
+- Digital Electronics
+- Signal Conditioning
+- LC Filtering
+- Voltage Multipliers
+- Transistor Switching
+- ADC Measurement
+- Embedded Systems
+- Battery-Powered Electronics
 
 ### Microcontroller
 
-* **PIC12F675**
-* XC8
-* ADC
-* GPIO
-* ICSP programming
+- **PIC12F675**
+- Embedded C
+- XC8
+- ADC
+- GPIO
+- ICSP
 
 ### Software
 
-* **KiCad** — schematic and PCB design
-* **PSIM** — system and filter simulation
-* **PSpice** — component-level circuit simulation
-* **MPLAB IDE** — PIC firmware development and debugging
-
-These tools were used throughout the simulation, PCB design, firmware development, and implementation stages.
-
----
-
-# 🔌 PCB & Hardware Design
-
-The electronic boards were designed using **KiCad**, including:
-
-* Complete schematic design
-* PIC12F675 measurement circuitry
-* Transistor output stage
-* ICSP programming interface
-* Component protection
-* PCB implementation
-
-The PIC programming interface uses **ICSP (In-Circuit Serial Programming)**, allowing the microcontroller to be programmed without removing it from the PCB.
-
-### PCB
-
-The project includes a physical implementation of the electronic detection system, moving from theoretical calculations and simulations to an actual PCB realization.
+| Tool | Purpose |
+|---|---|
+| **KiCad** | Schematic and PCB design |
+| **PSIM** | System and circuit simulation |
+| **PSpice** | Detailed circuit simulation |
+| **MPLAB IDE** | PIC firmware development |
 
 ---
 
-# 📊 Simulation & Validation
+# 📚 Skills Developed
 
-The design process followed three main stages:
+Through this project, I developed practical experience in:
 
-```text
-Theoretical Design
-       │
-       ▼
-Circuit Simulation
-       │
-       ▼
-PCB Implementation
-       │
-       ▼
-Experimental Validation
-```
+- Electronic system architecture
+- Analog circuit design
+- Digital circuit design
+- Signal filtering
+- Signal detection
+- Voltage multiplier design
+- Microcontroller programming
+- ADC-based measurement
+- Embedded C programming
+- PIC12F675 development
+- PCB design with KiCad
+- PCB routing
+- ICSP programming
+- Circuit simulation
+- Hardware debugging
+- Experimental measurement
+- Transition from theoretical design to physical implementation
 
-The common input stages were dimensioned analytically and validated through **PSIM**, while **PSpice** was used for detailed component-level simulation.
+---
 
-The project also compared theoretical and measured behavior. For example, the RC memory circuit showed a difference between the theoretical discharge time (**≈ 402.4 s**) and the measured value (**≈ 120 s**), attributed to real component tolerances, leakage currents, input resistance, and diode behavior.
+# 🚀 Possible Future Improvements
+
+Future versions of the system could include:
+
+- Adjustable detection thresholds
+- Improved false-alarm rejection
+- Lower-power operating modes
+- Battery-level monitoring
+- More compact PCB design
+- Remote alarm notification
+- Wireless communication
+- Cable fault localization
+- Advanced digital signal processing
 
 ---
 
@@ -265,8 +448,13 @@ cable-cut-detection-system/
 │
 ├── README.md
 │
-├── docs/
-│   └── project-report.pdf
+├── images/
+│   ├── final-prototype.png
+│   ├── analog-schematic.png
+│   ├── digital-schematic.png
+│   ├── digital-pcb.png
+│   ├── digital-pcb-3d.png
+│   └── oscilloscope.png
 │
 ├── hardware/
 │   ├── analog/
@@ -286,61 +474,22 @@ cable-cut-detection-system/
 │   ├── PSIM/
 │   └── PSpice/
 │
-└── images/
-    ├── system-architecture.png
-    ├── schematic.png
-    └── pcb.png
+└── docs/
+    └── project-report.pdf
 ```
-
----
-
-# 🚀 What I Learned
-
-This project allowed me to develop practical skills in:
-
-* Electronic system architecture
-* Analog and digital circuit design
-* Signal filtering and conditioning
-* Voltage multiplier design
-* Embedded C programming
-* PIC microcontroller programming
-* ADC-based signal detection
-* PCB design with KiCad
-* Circuit simulation with PSIM and PSpice
-* ICSP programming
-* Hardware debugging
-* Transition from theoretical calculations to physical implementation
-
----
-
-# 🔮 Possible Improvements
-
-Future versions could improve the system by introducing:
-
-* Adjustable detection thresholds
-* More advanced false-alarm filtering
-* Lower-power operating modes
-* Battery-level monitoring
-* A more compact PCB
-* Remote notification capability
-* Cable fault localization
-* More advanced digital signal processing
 
 ---
 
 # 👨‍💻 Author
 
-**Melek Chourabi**
+## Melek Chourabi
 
-Electrical Engineering Student
-Interested in **Embedded Systems • Electronics • Automation • Robotics**
+**Electrical Engineering Student**
 
----
+Interested in:
 
-## 📜 Project Context
-
-This project was developed as an engineering electronics project involving the **study, design, simulation, and realization of two cable-cut detection architectures**: a mixed analog/digital solution and a microcontroller-based solution.
+`Embedded Systems` • `Electronics` • `Automation` • `Robotics` • `Control Systems`
 
 ---
 
-⭐ If you find this project interesting, feel free to explore the schematics, firmware, simulations, and PCB files included in the repository.
+⭐ **If you find this project interesting, feel free to explore the schematics, firmware, simulations, and PCB design files.**
