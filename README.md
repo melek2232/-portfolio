@@ -12,7 +12,7 @@
 </p>
 
 I am a final-year electrical engineering student at **ENIT** (École Nationale d'Ingénieurs de Tunis, Tunisia). I like projects where
-electronics, firmware and software meet: robots, instrumentation and embedded vision. Each project below comes with its documentation,
+electronics, firmware and software meet: robots, instrumentation, connected sensors and embedded vision. Each project below comes with its documentation,
 and the code that can be tested without hardware has automated tests.
 
 ---
@@ -48,6 +48,15 @@ and the code that can be tested without hardware has automated tests.
       <p><sub>KiCad · PIC12F675 · analog design · oscilloscope measurements</sub></p>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <a href="ble-mqtt-sensor-monitor/README.md"><img src="assets/card-mqtt.jpg" alt="Node-RED dashboard with live sensor data"></a>
+      <h3>📡 <a href="ble-mqtt-sensor-monitor/README.md">Wireless sensor monitor (BLE + MQTT)</a></h3>
+      <p>Arduino Nano 33 BLE Sense → BLE → Raspberry Pi gateway → Mosquitto → Node-RED dashboard. Motion, temperature, humidity and pressure at 1 Hz, with 70 minutes of logged data.</p>
+      <p><sub>MQTT · Mosquitto · BLE · Node-RED · Python (bleak, paho) · Arduino</sub></p>
+    </td>
+    <td width="50%" valign="top"></td>
+  </tr>
 </table>
 
 ---
@@ -59,6 +68,7 @@ and the code that can be tested without hardware has automated tests.
 | 🤖 **Robotics** | ROS 2 (nodes, TF, launch, lifecycle), SLAM and navigation (slam_toolbox, Nav2), differential-drive kinematics, safety layers (dead-man, e-stop, obstacle stop) |
 | 🔌 **Embedded / hardware** | Raspberry Pi (GPIO, camera), Arduino (I²C, PWM, serial protocols), H-bridge motor drivers, PIC12F675, ADCs and analog front-ends, digital logic (FSMs) |
 | 💻 **Software** | Python (Tkinter, pyserial, pytest), C / C++ basics, computer vision (YOLOv8, ONNX Runtime), Docker, Git and CI |
+| 📡 **Networks / IoT** | MQTT (Mosquitto, paho-mqtt, topics and QoS), Bluetooth Low Energy (GATT, notifications), Node-RED dashboards, JSON telemetry |
 | 📐 **Design tools** | KiCad, Proteus, SolidWorks, LaTeX / TikZ, functional specifications (bête à cornes, pieuvre) |
 
 ---

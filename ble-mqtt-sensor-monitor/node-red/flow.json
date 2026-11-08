@@ -1,0 +1,761 @@
+[
+  {
+    "id": "1ac207541b7bd1f1",
+    "type": "tab",
+    "label": "Flux 3",
+    "disabled": false,
+    "info": "",
+    "env": []
+  },
+  {
+    "id": "e7ca4852b4b36154",
+    "type": "mqtt in",
+    "z": "1ac207541b7bd1f1",
+    "name": "sensor",
+    "topic": "sensors/nano33",
+    "qos": "2",
+    "datatype": "json",
+    "broker": "5569f23d32e96f37",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 110,
+    "y": 460,
+    "wires": [
+      [
+        "91c620dd40413d82",
+        "ec7e6e85c4845543",
+        "99b54b5da0cbbc4b",
+        "99585b19f9f719e3",
+        "6ed712c620df720b",
+        "569a9e6f23f21630",
+        "86adc66b5152a50e",
+        "4a47c482a4e9df89",
+        "b6b748d479084551",
+        "d01c80cfdecb06e8",
+        "b716f274c42e4ca0",
+        "e0ce2a923fdbd742"
+      ]
+    ]
+  },
+  {
+    "id": "ec7e6e85c4845543",
+    "type": "file",
+    "z": "1ac207541b7bd1f1",
+    "name": "log_file",
+    "filename": "nano33_log.ndjson",
+    "filenameType": "str",
+    "appendNewline": true,
+    "createDir": true,
+    "overwriteFile": "false",
+    "encoding": "none",
+    "x": 310,
+    "y": 120,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "91c620dd40413d82",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "ax",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.ax",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "ax",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 270,
+    "y": 200,
+    "wires": [
+      [
+        "329dd3f3626ea4c7"
+      ]
+    ]
+  },
+  {
+    "id": "99b54b5da0cbbc4b",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "ay",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.ay",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "ay",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 270,
+    "y": 260,
+    "wires": [
+      [
+        "ba8227b0c28356ab"
+      ]
+    ]
+  },
+  {
+    "id": "99585b19f9f719e3",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "az",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.az",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "az",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 270,
+    "y": 320,
+    "wires": [
+      [
+        "5125f07a543c2ade"
+      ]
+    ]
+  },
+  {
+    "id": "6ed712c620df720b",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "roll_deg",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.roll_deg",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "roll_deg",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 280,
+    "y": 420,
+    "wires": [
+      [
+        "9b0ecda89f94d115"
+      ]
+    ]
+  },
+  {
+    "id": "569a9e6f23f21630",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "pitch_deg",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.pitch_deg",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "pitch_deg",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 280,
+    "y": 500,
+    "wires": [
+      [
+        "1bde70dae23f6e14"
+      ]
+    ]
+  },
+  {
+    "id": "86adc66b5152a50e",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "temperature_c",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.temperature_c",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "temperature_c",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 300,
+    "y": 560,
+    "wires": [
+      [
+        "95950683c75a17d0"
+      ]
+    ]
+  },
+  {
+    "id": "4a47c482a4e9df89",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "humidity_pct",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.humidity_pct",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "humidity_pct",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 290,
+    "y": 620,
+    "wires": [
+      [
+        "48ba861a6529b25a"
+      ]
+    ]
+  },
+  {
+    "id": "b6b748d479084551",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "pressure_kpa",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.pressure_kpa",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "pressure_kpa",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 300,
+    "y": 680,
+    "wires": [
+      [
+        "cf9b41edecf3bb0f"
+      ]
+    ]
+  },
+  {
+    "id": "d01c80cfdecb06e8",
+    "type": "change",
+    "z": "1ac207541b7bd1f1",
+    "name": "altitude_m",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "payload.altitude_m",
+        "tot": "msg"
+      },
+      {
+        "t": "set",
+        "p": "topic",
+        "pt": "msg",
+        "to": "altitude_m",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 290,
+    "y": 740,
+    "wires": [
+      [
+        "77f4a7681138fb9d"
+      ]
+    ]
+  },
+  {
+    "id": "9b0ecda89f94d115",
+    "type": "ui_gauge",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "12d4f519fa656973",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "gtype": "gage",
+    "title": "roll_deg",
+    "label": "°",
+    "format": "{{value}}",
+    "min": -180,
+    "max": 180,
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#c77a7a"
+    ],
+    "seg1": "",
+    "seg2": "",
+    "diff": false,
+    "className": "",
+    "x": 520,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "1bde70dae23f6e14",
+    "type": "ui_gauge",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "12d4f519fa656973",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "gtype": "gage",
+    "title": "pitch_deg",
+    "label": "°",
+    "format": "{{value}}",
+    "min": -90,
+    "max": 90,
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#c77a7a"
+    ],
+    "seg1": "",
+    "seg2": "",
+    "diff": false,
+    "className": "",
+    "x": 520,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "95950683c75a17d0",
+    "type": "ui_gauge",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "12d4f519fa656973",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "gtype": "gage",
+    "title": "temperature",
+    "label": "°C",
+    "format": "{{value}}",
+    "min": 0,
+    "max": 50,
+    "colors": [
+      "#00b500",
+      "#e6e600",
+      "#c77a7a"
+    ],
+    "seg1": "",
+    "seg2": "",
+    "diff": false,
+    "className": "",
+    "x": 530,
+    "y": 560,
+    "wires": []
+  },
+  {
+    "id": "48ba861a6529b25a",
+    "type": "ui_chart",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "e618cbbe02540c95",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "label": "humidity",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "",
+    "dot": false,
+    "ymin": "",
+    "ymax": "",
+    "removeOlder": 1,
+    "removeOlderPoints": "",
+    "removeOlderUnit": "3600",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [
+      "#1f77b4",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
+    ],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "className": "",
+    "x": 540,
+    "y": 620,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "cf9b41edecf3bb0f",
+    "type": "ui_chart",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "e618cbbe02540c95",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "label": "pressure",
+    "chartType": "bar",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "",
+    "dot": false,
+    "ymin": "",
+    "ymax": "",
+    "removeOlder": 1,
+    "removeOlderPoints": "",
+    "removeOlderUnit": "3600",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [
+      "#1f77b4",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
+    ],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "className": "",
+    "x": 520,
+    "y": 680,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "77f4a7681138fb9d",
+    "type": "ui_chart",
+    "z": "1ac207541b7bd1f1",
+    "name": "",
+    "group": "e618cbbe02540c95",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "label": "altitude",
+    "chartType": "line",
+    "legend": "false",
+    "xformat": "HH:mm:ss",
+    "interpolate": "linear",
+    "nodata": "",
+    "dot": false,
+    "ymin": "",
+    "ymax": "",
+    "removeOlder": 1,
+    "removeOlderPoints": "",
+    "removeOlderUnit": "3600",
+    "cutout": 0,
+    "useOneColor": false,
+    "useUTC": false,
+    "colors": [
+      "#1f77b4",
+      "#aec7e8",
+      "#ff7f0e",
+      "#2ca02c",
+      "#98df8a",
+      "#d62728",
+      "#ff9896",
+      "#9467bd",
+      "#c5b0d5"
+    ],
+    "outputs": 1,
+    "useDifferentColor": false,
+    "className": "",
+    "x": 520,
+    "y": 740,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b716f274c42e4ca0",
+    "type": "ui_template",
+    "z": "1ac207541b7bd1f1",
+    "group": "4bb0c1f81366cc58",
+    "name": "rep",
+    "order": 0,
+    "width": 0,
+    "height": 0,
+    "format": "<div style=\"background:#111827;color:white;padding:12px;border-radius:12px;font-family:Arial,sans-serif\">\n    <h3 style=\"text-align:center;margin:5px\">Repère 3D — Accéléromètre</h3>\n\n    <canvas id=\"accelCanvas\" style=\"width:100%;height:350px;display:block\">\n    </canvas>\n\n    <div style=\"display:flex;justify-content:space-around;flex-wrap:wrap\">\n        <span style=\"color:#ff6464\">X : <b>{{values.ax}}</b></span>\n        <span style=\"color:#55df83\">Y : <b>{{values.ay}}</b></span>\n        <span style=\"color:#60a5fa\">Z : <b>{{values.az}}</b></span>\n    </div>\n</div>\n\n<script>\n    (function(scope) {\n    scope.values = {ax: 0, ay: 0, az: 0};\n\n    var canvas, ctx;\n    var lastMsg = null;\n\n    function draw() {\n        canvas = document.getElementById(\"accelCanvas\");\n        if (!canvas) return;\n\n        var rect = canvas.getBoundingClientRect();\n        if (!rect.width || !rect.height) return;\n\n        var dpr = window.devicePixelRatio || 1;\n        canvas.width = rect.width * dpr;\n        canvas.height = rect.height * dpr;\n\n        ctx = canvas.getContext(\"2d\");\n        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);\n\n        var w = rect.width;\n        var h = rect.height;\n        var cx = w / 2;\n        var cy = h / 2 + 15;\n\n        ctx.clearRect(0, 0, w, h);\n\n        // Projection 3D vers 2D\n        function project(x, y, z) {\n            return {\n                x: cx + (x - y) * 0.707 * 100,\n                y: cy + (x + y) * 0.30 * 100 - z * 100\n            };\n        }\n\n        function line(a, b, color, width) {\n            ctx.beginPath();\n            ctx.moveTo(a.x, a.y);\n            ctx.lineTo(b.x, b.y);\n            ctx.strokeStyle = color;\n            ctx.lineWidth = width || 2;\n            ctx.stroke();\n        }\n\n        // Axes X, Y et Z\n        var O = project(0, 0, 0);\n        var X = project(1.5, 0, 0);\n        var Y = project(0, 1.5, 0);\n        var Z = project(0, 0, 1.5);\n\n        line(O, X, \"#ff6464\", 3);\n        line(O, Y, \"#55df83\", 3);\n        line(O, Z, \"#60a5fa\", 3);\n\n        function label(p, txt, color) {\n            ctx.fillStyle = color;\n            ctx.font = \"bold 14px Arial\";\n            ctx.fillText(txt, p.x + 5, p.y - 5);\n        }\n\n        label(X, \"X\");\n        label(Y, \"Y\");\n        label(Z, \"Z\");\n\n        // Valeurs reçues du capteur\n        if (!lastMsg || !lastMsg.payload) return;\n\n        var p = lastMsg.payload;\n        var ax = Number(p.ax);\n        var ay = Number(p.ay);\n        var az = Number(p.az);\n\n        if (![ax, ay, az].every(Number.isFinite)) return;\n\n        // Normalisation pour garder le vecteur visible\n        var magnitude = Math.sqrt(ax*ax + ay*ay + az*az);\n        var scale = magnitude > 0 ? 1.2 / Math.max(1, magnitude) : 1;\n\n        var V = project(ax * scale, ay * scale, az * scale);\n\n        // Vecteur d'accélération\n        line(O, V, \"#facc15\", 4);\n\n        // Pointe du vecteur\n        var angle = Math.atan2(V.y - O.y, V.x - O.x);\n        var arrow = 10;\n\n        ctx.beginPath();\n        ctx.moveTo(V.x, V.y);\n        ctx.lineTo(\n            V.x - arrow * Math.cos(angle - Math.PI / 6),\n            V.y - arrow * Math.sin(angle - Math.PI / 6)\n        );\n        ctx.lineTo(\n            V.x - arrow * Math.cos(angle + Math.PI / 6),\n            V.y - arrow * Math.sin(angle + Math.PI / 6)\n        );\n        ctx.closePath();\n        ctx.fillStyle = \"#facc15\";\n        ctx.fill();\n\n        ctx.fillStyle = \"#facc15\";\n        ctx.font = \"bold 13px Arial\";\n        ctx.fillText(\"Accélération\", V.x + 8, V.y - 8);\n    }\n\n    scope.$watch(\"msg\", function(msg) {\n        if (!msg || !msg.payload) return;\n\n        lastMsg = msg;\n        scope.values = {\n            ax: Number(msg.payload.ax).toFixed(3),\n            ay: Number(msg.payload.ay).toFixed(3),\n            az: Number(msg.payload.az).toFixed(3)\n        };\n\n        setTimeout(draw, 0);\n    });\n\n    scope.$on(\"$destroy\", function() {\n        lastMsg = null;\n    });\n})(scope);\n</script>",
+    "storeOutMessages": true,
+    "fwdInMessages": true,
+    "resendOnRefresh": true,
+    "templateScope": "local",
+    "className": "",
+    "x": 730,
+    "y": 240,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "e0ce2a923fdbd742",
+    "type": "debug",
+    "z": "1ac207541b7bd1f1",
+    "name": "debug 1",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "false",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 570,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "329dd3f3626ea4c7",
+    "type": "ui_text",
+    "z": "1ac207541b7bd1f1",
+    "group": "4bb0c1f81366cc58",
+    "order": 1,
+    "width": 0,
+    "height": 0,
+    "name": "",
+    "label": "ax",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#000000",
+    "x": 510,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "ba8227b0c28356ab",
+    "type": "ui_text",
+    "z": "1ac207541b7bd1f1",
+    "group": "4bb0c1f81366cc58",
+    "order": 2,
+    "width": 0,
+    "height": 0,
+    "name": "",
+    "label": "ay",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#000000",
+    "x": 510,
+    "y": 260,
+    "wires": []
+  },
+  {
+    "id": "5125f07a543c2ade",
+    "type": "ui_text",
+    "z": "1ac207541b7bd1f1",
+    "group": "4bb0c1f81366cc58",
+    "order": 3,
+    "width": 0,
+    "height": 0,
+    "name": "",
+    "label": "az",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "className": "",
+    "style": false,
+    "font": "",
+    "fontSize": 16,
+    "color": "#000000",
+    "x": 510,
+    "y": 320,
+    "wires": []
+  },
+  {
+    "id": "5569f23d32e96f37",
+    "type": "mqtt-broker",
+    "name": "nano33",
+    "broker": "192.168.1.117",
+    "port": 1883,
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": 4,
+    "keepalive": 60,
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthRetain": "false",
+    "birthPayload": "",
+    "birthMsg": {},
+    "closeTopic": "",
+    "closeQos": "0",
+    "closeRetain": "false",
+    "closePayload": "",
+    "closeMsg": {},
+    "willTopic": "",
+    "willQos": "0",
+    "willRetain": "false",
+    "willPayload": "",
+    "willMsg": {},
+    "userProps": "",
+    "sessionExpiry": ""
+  },
+  {
+    "id": "12d4f519fa656973",
+    "type": "ui_group",
+    "name": "temperature",
+    "tab": "a0292c56a93c5a5e",
+    "order": 5,
+    "disp": true,
+    "width": 6,
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "e618cbbe02540c95",
+    "type": "ui_group",
+    "name": "sensor",
+    "tab": "a0292c56a93c5a5e",
+    "order": 4,
+    "disp": true,
+    "width": 6,
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "4bb0c1f81366cc58",
+    "type": "ui_group",
+    "name": "position",
+    "tab": "a0292c56a93c5a5e",
+    "order": 1,
+    "disp": true,
+    "width": 6,
+    "collapse": false,
+    "className": ""
+  },
+  {
+    "id": "a0292c56a93c5a5e",
+    "type": "ui_tab",
+    "name": "sensors",
+    "icon": "dashboard",
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "2e2238c68d2eb34f",
+    "type": "global-config",
+    "env": [],
+    "modules": {
+      "node-red-dashboard": "3.6.6"
+    }
+  }
+]
