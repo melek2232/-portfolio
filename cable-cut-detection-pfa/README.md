@@ -3,7 +3,7 @@
 > **Real-time embedded system for detecting cable interruption and triggering a local audible and visual alarm.**
 
 <p align="center">
-  <img src="images/final-prototype.png" width="600">
+  <img src="images/final-prototype.jpg" width="600">
 </p>
 
 <p align="center">
@@ -114,6 +114,14 @@ TLC555
 
 <p align="center">
   <b>Complete analog/discrete detection circuit</b>
+</p>
+
+<p align="center">
+  <img src="images/analog-prototype.png" width="420">
+</p>
+
+<p align="center">
+  <b>Analog board as built</b>
 </p>
 
 ### Main Components
@@ -292,11 +300,19 @@ The PCB design includes:
 After schematic design, simulation, PCB design, and fabrication, the system was assembled as a physical prototype.
 
 <p align="center">
-  <img src="images/final-prototype.png" width="600">
+  <img src="images/final-prototype.jpg" width="600">
 </p>
 
 <p align="center">
   <b>Final assembled electronic board</b>
+</p>
+
+<p align="center">
+  <img src="images/prototype-detail.jpg" width="600">
+</p>
+
+<p align="center">
+  <b>The board during a test on the bench</b>
 </p>
 
 The prototype demonstrates the transition from the theoretical design to a physical hardware implementation.
@@ -444,39 +460,21 @@ Future versions of the system could include:
 # 📁 Repository Structure
 
 ```text
-cable-cut-detection-system/
-│
+cable-cut-detection-pfa/
 ├── README.md
-│
-├── images/
-│   ├── final-prototype.png
-│   ├── analog-schematic.png
-│   ├── digital-schematic.png
-│   ├── digital-pcb.png
-│   ├── digital-pcb-3d.png
-│   └── oscilloscope.png
-│
-├── hardware/
-│   ├── analog/
-│   │   ├── schematic/
-│   │   └── pcb/
-│   │
-│   └── digital/
-│       ├── schematic/
-│       └── pcb/
-│
-├── firmware/
-│   └── PIC12F675/
-│       ├── src/
-│       └── include/
-│
-├── simulations/
-│   ├── PSIM/
-│   └── PSpice/
-│
-└── docs/
-    └── project-report.pdf
+└── images/
+    ├── analog-schematic.png     # analog / discrete circuit
+    ├── analog-prototype.png     # analog board as built
+    ├── digital-schematic.png    # PIC12F675 circuit (KiCad)
+    ├── digital-pcb.png          # PCB layout (KiCad)
+    ├── digital-pcb-3d.png       # 3D view of the PCB
+    ├── final-prototype.jpg      # assembled digital board
+    ├── prototype-detail.jpg     # board during testing
+    └── oscilloscope.png         # capacitor discharge measured on the scope
 ```
+
+> 📌 The PIC12F675 firmware (XC8), the PSIM / PSpice simulations, the KiCad project files and the project report are not yet
+> published in this repository; they will be added.
 
 ---
 
@@ -492,4 +490,4 @@ Interested in:
 
 ---
 
-⭐ **If you find this project interesting, feel free to explore the schematics, firmware, simulations, and PCB design files.**
+⭐ **If you find this project interesting, feel free to explore the schematics and PCB design shown above.**

@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  counter-app-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install pytest
+      - name: Syntax check
+        run: python -m compileall -q inventory-cart-rpi-yolo/counter_app
+      - name: Unit tests (inventory state + barcode assembly)
+        working-directory: inventory-cart-rpi-yolo/counter_app
+        run: python -m pytest -q tests

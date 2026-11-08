@@ -65,7 +65,7 @@ Schematic captured in Proteus 8 (see `docs/schematic-notes.md`).
 
 ## 🖼️ Schematic
 
-![Proteus schematic of the industrial voltmeter](industrial-voltmeter/docs/schematic.png)
+![Proteus schematic of the industrial voltmeter](docs/schematic.png)
 
 *Full circuit captured and simulated in Proteus 8 (`stage.pdsprj`): Arduino UNO driving
 the ADS1115 over I²C, the CD4051 multiplexer selecting between the R1–R5 resistive
@@ -151,7 +151,7 @@ sensitive (less attenuated) range.
 ## 📁 Repository Structure
 
 ```
-industrial-voltmeter/
+auto-ranging-voltmeter/
 ├── README.md                    # This file
 ├── LICENSE
 ├── src/
@@ -187,8 +187,8 @@ industrial-voltmeter/
 ### Upload
 
 ```bash
-git clone https://github.com/<your-username>/industrial-voltmeter.git
-cd industrial-voltmeter/src/voltmeter
+git clone https://github.com/melek2232/-portfolio.git
+cd -- -portfolio/auto-ranging-voltmeter/src/voltmeter
 # Open voltmeter.ino in the Arduino IDE, select "Arduino UNO", and upload.
 ```
 

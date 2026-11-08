@@ -1,0 +1,13 @@
+opencv-python
+onnxruntime
+numpy
+pillow
+# Uncomment if you're using the Raspberry Pi Camera Module instead of a
+# USB webcam (install the matching system package first, see README):
+# picamera2
+
+# NOTE: `ultralytics`/`torch` are intentionally NOT listed here for the
+# Pi install. They're only needed on your dev machine to train/export
+# models (`yolo export model=... format=onnx`) — running them ON the Pi
+# crashes with "Instruction non permise" (SIGILL, a CPU instruction the
+# Pi's ARM core doesn't support in the generic PyPI torch wheel).
