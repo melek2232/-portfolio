@@ -18,3 +18,15 @@ jobs:
       - name: Unit tests (inventory state + barcode assembly)
         working-directory: inventory-cart-rpi-yolo/counter_app
         run: python -m pytest -q tests
+
+  robot-offline-tests:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install numpy pyserial matplotlib
+      - name: Robot offline tests (firmware, serial link, safety layer, simulated room)
+        working-directory: ros2-lidar-robot/robot_ws
+        run: ./run_all_tests.sh

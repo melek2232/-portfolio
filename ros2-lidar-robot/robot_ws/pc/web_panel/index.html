@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Panel</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #f4f5f7; --panel: #ffffff; --ink: #1c2330; --muted: #667085; --line: #d9dde5;
+    --accent: #1f6feb; --ok: #1a7f37; --warn: #b7791f; --bad: #c0262d; --map-bg: #e9ebef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b; --panel: #1b2029; --ink: #e8ebf1; --muted: #98a1b3; --line: #2c3340;
+      --accent: #5b9dff; --ok: #3fb950; --warn: #d6a33b; --bad: #f2616a; --map-bg: #0e1116;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--ink); font: 14px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .app { display: grid; grid-template-columns: 1fr 320px; height: 100%; }
+  .stage { position: relative; background: var(--map-bg); min-width: 0; }
+  canvas { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  canvas.goal { cursor: crosshair; }
+  .side { background: var(--panel); border-left: 1px solid var(--line); padding: 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-size: 15px; margin: 0; display: flex; align-items: center; gap: 8px; }
+  h2 { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; font-weight: 600; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.ok { background: var(--ok); } .dot.warn { background: var(--warn); } .dot.bad { background: var(--bad); }
+  button { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .estop { background: var(--bad); color: #fff; border-color: var(--bad); font-weight: 700; font-size: 16px; padding: 14px; width: 100%; }
+  .estop.active { outline: 3px solid var(--bad); outline-offset: 2px; background: #7d1015; }
+  .pad { display: grid; grid-template-columns: repeat(3, 56px); grid-template-rows: repeat(3, 48px); gap: 6px; justify-content: center; }
+  .pad button { padding: 0; font-size: 18px; user-select: none; touch-action: none; }
+  .pad button.held { background: var(--accent); color: #fff; border-color: var(--accent); }
+  label.row { display: grid; grid-template-columns: 72px 1fr 52px; align-items: center; gap: 8px; font-size: 13px; }
+  input[type=range] { width: 100%; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; font-size: 13px; }
+  .kv span:nth-child(odd) { color: var(--muted); }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--ok); width: 0; }
+  .problems { color: var(--bad); font-size: 12px; margin: 4px 0 0; padding-left: 16px; }
+  .hint { color: var(--muted); font-size: 12px; }
+  .overlay { position: absolute; left: 12px; top: 12px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .overlay button { box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .banner { position: absolute; left: 50%; transform: translateX(-50%); top: 12px; background: var(--bad); color: #fff; padding: 6px 14px; border-radius: 8px; font-weight: 600; display: none; }
+  .legend { position: absolute; right: 12px; bottom: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 12px; color: var(--muted); }
+  @media (max-width: 800px) { .app { grid-template-columns: 1fr; grid-template-rows: 50vh 1fr; } .side { border-left: 0; border-top: 1px solid var(--line); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <canvas id="cv" aria-label="Live map"></canvas>
+    <div class="overlay">
+      <button id="btnGoal" title="Click and drag on the map: position and heading">Set goal</button>
+      <button id="btnCenter">Center</button>
+      <label class="hint" style="display:flex;align-items:center;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 8px"><input type="checkbox" id="follow" checked> follow</label>
+      <button id="btnClear">Clear trail</button>
+      <button id="btnSave">Download map</button>
+    </div>
+    <div class="banner" id="banner">NO LINK TO THE ROBOT</div>
+    <div class="legend">grid 1 m &nbsp;|&nbsp; <span id="zoomInfo"></span></div>
+  </div>
+  <aside class="side">
+    <h1><span class="dot" id="linkDot"></span> Robot panel <span class="hint" id="linkTxt">connecting…</span></h1>
+
+    <section>
+      <button class="estop" id="btnEstop">EMERGENCY STOP (Esc)</button>
+      <div class="hint" style="margin-top:6px">Software stop only. Keep the motor battery switch within reach.</div>
+    </section>
+
+    <section>
+      <h2>Mode</h2>
+      <div class="modes" id="modes">
+        <button data-mode="stop">Stop</button>
+        <button data-mode="manual">Manual</button>
+        <button data-mode="explore">Explore</button>
+        <button data-mode="nav">Navigate</button>
+      </div>
+      <div class="hint" style="margin-top:6px"><b>Manual</b>: drive with the pad or keys. <b>Explore</b>: the robot discovers the room by itself. <b>Navigate</b>: set a goal on the map (needs Nav2).</div>
+    </section>
+
+    <section>
+      <h2>Drive (hold)</h2>
+      <div class="pad" id="pad">
+        <button data-k="fl">↖</button><button data-k="f">▲</button><button data-k="fr">↗</button>
+        <button data-k="l">◀</button><button data-k="s">■</button><button data-k="r">▶</button>
+        <button data-k="bl">↙</button><button data-k="b">▼</button><button data-k="br">↘</button>
+      </div>
+      <div class="hint" style="text-align:center;margin:6px 0">Arrows / WASD to drive, Space to stop. Release = the robot stops.</div>
+      <label class="row">Speed <input type="range" id="lin" min="0.04" max="0.20" step="0.01" value="0.10"><span id="linV">0.10 m/s</span></label>
+      <label class="row">Turn <input type="range" id="ang" min="0.2" max="1.2" step="0.05" value="0.6"><span id="angV">0.6 rad/s</span></label>
+    </section>
+
+    <section>
+      <h2>Robot</h2>
+      <div class="kv">
+        <span>Mode</span><span id="sMode">-</span>
+        <span>Output</span><span id="sOut">-</span>
+        <span>Reason</span><span id="sReason">-</span>
+        <span>Lidar</span><span id="sScan">-</span>
+        <span>Arduino Mega</span><span id="sMega">-</span>
+        <span>Odometry</span><span id="sOdo">-</span>
+        <span>Pi</span><span id="sPi">-</span>
+        <span>Pose</span><span id="sPose">-</span>
+      </div>
+      <div style="margin-top:8px"><div class="hint">Free distance ahead <b id="dF">-</b></div><div class="bar"><i id="bF"></i></div></div>
+      <div style="margin-top:6px"><div class="hint">Free distance behind <b id="dB">-</b></div><div class="bar"><i id="bB"></i></div></div>
+      <ul class="problems" id="problems"></ul>
+    </section>
+  </aside>
+</div>
+
+<script>
+'use strict';
+const TOKEN = '__TOKEN__';
+const $ = (id) => document.getElementById(id);
+const cv = $('cv'), ctx = cv.getContext('2d');
+
+// ---------------------------------------------------------------- view
+const view = { cx: 0, cy: 0, s: 60 };            // world point at the canvas centre, pixels per metre
+let mapImg = null, mapInfo = null, mapVersion = 0, mapRaw = null;
+let pose = null, scan = [], trail = [], goal = null, goalMode = false, drag = null, goalDrag = null;
+let lastOk = 0;
+
+function resize() {
+  const r = cv.getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  cv.width = Math.round(r.width * d); cv.height = Math.round(r.height * d);
+  ctx.setTransform(d, 0, 0, d, 0, 0);
+}
+window.addEventListener('resize', resize); resize();
+const W = () => cv.getBoundingClientRect().width, H = () => cv.getBoundingClientRect().height;
+const sx = (x) => W() / 2 + (x - view.cx) * view.s;
+const sy = (y) => H() / 2 - (y - view.cy) * view.s;
+const wx = (px) => view.cx + (px - W() / 2) / view.s;
+const wy = (py) => view.cy - (py - H() / 2) / view.s;
+const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function buildMapImage(m) {
+  const bin = atob(m.data), n = m.w * m.h, rgba = new Uint8ClampedArray(n * 4);
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  for (let i = 0; i < n; i++) {
+    const v = bin.charCodeAt(i);
+    let c;
+    if (v === 255) c = dark ? 40 : 205;               // unknown
+    else if (v >= 65) c = dark ? 235 : 20;            // occupied
+    else c = dark ? 70 : 254;                         // free
+    if (v !== 255 && v > 0 && v < 65) c = dark ? 70 : 254;
+    rgba[4 * i] = rgba[4 * i + 1] = rgba[4 * i + 2] = c; rgba[4 * i + 3] = 255;
+  }
+  const off = document.createElement('canvas'); off.width = m.w; off.height = m.h;
+  off.getContext('2d').putImageData(new ImageData(rgba, m.w, m.h), 0, 0);
+  return off;
+}
+
+function draw() {
+  const w = W(), h = H();
+  ctx.clearRect(0, 0, w, h);
+  // 1 m grid
+  ctx.lineWidth = 1; ctx.strokeStyle = css('--line'); ctx.globalAlpha = .55; ctx.beginPath();
+  const x0 = Math.floor(wx(0)), x1 = Math.ceil(wx(w)), y1 = Math.floor(wy(h)), y0 = Math.ceil(wy(0));
+  if ((x1 - x0) * (y0 - y1) < 6000) {
+    for (let x = x0; x <= x1; x++) { ctx.moveTo(sx(x), 0); ctx.lineTo(sx(x), h); }
+    for (let y = y1; y <= y0; y++) { ctx.moveTo(0, sy(y)); ctx.lineTo(w, sy(y)); }
+  }
+  ctx.stroke(); ctx.globalAlpha = 1;
+  // map
+  if (mapImg && mapInfo) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(sx(mapInfo.ox), sy(mapInfo.oy));
+    ctx.scale(mapInfo.res * view.s, -mapInfo.res * view.s);
+    ctx.drawImage(mapImg, 0, 0);
+    ctx.restore();
+  }
+  // trail
+  if (trail.length > 1) {
+    ctx.strokeStyle = css('--accent'); ctx.lineWidth = 2; ctx.globalAlpha = .7; ctx.beginPath();
+    trail.forEach((p, i) => i ? ctx.lineTo(sx(p[0]), sy(p[1])) : ctx.moveTo(sx(p[0]), sy(p[1])));
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  // lidar points
+  ctx.fillStyle = '#e5484d';
+  for (const p of scan) ctx.fillRect(sx(p[0]) - 1.5, sy(p[1]) - 1.5, 3, 3);
+  // goal
+  const g = goalDrag || goal;
+  if (g) {
+    ctx.strokeStyle = css('--ok'); ctx.fillStyle = css('--ok'); ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(sx(g.x), sy(g.y), 8, 0, 7); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(sx(g.x), sy(g.y));
+    ctx.lineTo(sx(g.x) + 22 * Math.cos(g.yaw), sy(g.y) - 22 * Math.sin(g.yaw)); ctx.stroke();
+  }
+  // robot
+  if (pose) {
+    const px = sx(pose.x), py = sy(pose.y), r = Math.max(8, 0.16 * view.s);
+    ctx.save(); ctx.translate(px, py); ctx.rotate(-pose.yaw);
+    ctx.fillStyle = css('--accent'); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(r, 0); ctx.lineTo(-r * .8, r * .7); ctx.lineTo(-r * .5, 0); ctx.lineTo(-r * .8, -r * .7); ctx.closePath();
+    ctx.fill(); ctx.stroke(); ctx.restore();
+  }
+  $('zoomInfo').textContent = view.s.toFixed(0) + ' px/m';
+  requestAnimationFrame(draw);
+}
+
+// ---------------------------------------------------------------- map interaction
+cv.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  const bx = wx(px), by = wy(py);
+  view.s = Math.max(8, Math.min(600, view.s * (e.deltaY < 0 ? 1.15 : 1 / 1.15)));
+  view.cx = bx - (px - W() / 2) / view.s; view.cy = by + (py - H() / 2) / view.s;
+  $('follow').checked = false;
+}, { passive: false });
+cv.addEventListener('pointerdown', (e) => {
+  cv.setPointerCapture(e.pointerId);
+  const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  if (goalMode) { goalDrag = { x: wx(px), y: wy(py), yaw: 0 }; }
+  else { drag = { px, py, cx: view.cx, cy: view.cy }; $('follow').checked = false; cv.style.cursor = 'grabbing'; }
+});
+cv.addEventListener('pointermove', (e) => {
+  const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  if (goalDrag) goalDrag.yaw = Math.atan2(-(py - sy(goalDrag.y)), px - sx(goalDrag.x));
+  else if (drag) { view.cx = drag.cx - (px - drag.px) / view.s; view.cy = drag.cy + (py - drag.py) / view.s; }
+});
+cv.addEventListener('pointerup', () => {
+  if (goalDrag) {
+    goal = goalDrag; goalDrag = null;
+    post('/api/goal', { x: goal.x, y: goal.y, yaw: goal.yaw });
+    setGoalMode(false);
+  }
+  drag = null; cv.style.cursor = goalMode ? 'crosshair' : 'grab';
+});
+function setGoalMode(on) { goalMode = on; $('btnGoal').classList.toggle('on', on); cv.classList.toggle('goal', on); }
+$('btnGoal').onclick = () => setGoalMode(!goalMode);
+$('btnCenter').onclick = () => { if (pose) { view.cx = pose.x; view.cy = pose.y; } };
+$('btnClear').onclick = () => { trail = []; };
+$('btnSave').onclick = () => {
+  if (!mapInfo || !mapRaw) return;
+  const n = mapInfo.w * mapInfo.h, body = new Uint8Array(n);
+  for (let r = 0; r < mapInfo.h; r++) for (let c = 0; c < mapInfo.w; c++) {
+    const v = mapRaw.charCodeAt(r * mapInfo.w + c), out = v === 255 ? 205 : (v >= 65 ? 0 : 254);
+    body[(mapInfo.h - 1 - r) * mapInfo.w + c] = out;           // PGM: first row is the top
+  }
+  const head = new TextEncoder().encode(`P5\n${mapInfo.w} ${mapInfo.h}\n255\n`);
+  const pgm = new Uint8Array(head.length + n); pgm.set(head); pgm.set(body, head.length);
+  const stamp = new Date().toISOString().replace(/[:T]/g, '-').slice(0, 19);
+  const yaml = `image: map_${stamp}.pgm\nmode: trinary\nresolution: ${mapInfo.res}\norigin: [${mapInfo.ox}, ${mapInfo.oy}, 0]\nnegate: 0\noccupied_thresh: 0.65\nfree_thresh: 0.25\n`;
+  for (const [name, data, type] of [[`map_${stamp}.pgm`, pgm, 'image/x-portable-graymap'], [`map_${stamp}.yaml`, yaml, 'text/yaml']]) {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type })); a.download = name; a.click();
+  }
+};
+
+// ---------------------------------------------------------------- commands
+async function post(path, body) {
+  try {
+    await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Panel-Token': TOKEN }, body: JSON.stringify(body) });
+  } catch (e) { /* link status is shown by the poll loop */ }
+}
+const held = new Set();
+const lin = () => parseFloat($('lin').value), ang = () => parseFloat($('ang').value);
+$('lin').oninput = () => { $('linV').textContent = lin().toFixed(2) + ' m/s'; };
+$('ang').oninput = () => { $('angV').textContent = ang().toFixed(1) + ' rad/s'; };
+function wanted() {
+  let v = 0, w = 0;
+  if (held.has('f') || held.has('fl') || held.has('fr')) v += 1;
+  if (held.has('b') || held.has('bl') || held.has('br')) v -= 1;
+  if (held.has('l') || held.has('fl') || held.has('bl')) w += 1;
+  if (held.has('r') || held.has('fr') || held.has('br')) w -= 1;
+  if (v < 0) w = -w;                            // natural steering when reversing
+  return [v * lin(), w * ang()];
+}
+let wasMoving = false;
+setInterval(() => {                             // 10 Hz while something is held; silence = the robot stops
+  const [v, w] = wanted();
+  if (v !== 0 || w !== 0) { post('/api/cmd', { v, w }); wasMoving = true; }
+  else if (wasMoving) { post('/api/cmd', { v: 0, w: 0 }); wasMoving = false; }
+}, 100);
+function press(k, on) {
+  if (k === 's') { held.clear(); document.querySelectorAll('#pad button').forEach(b => b.classList.remove('held')); post('/api/cmd', { v: 0, w: 0 }); return; }
+  on ? held.add(k) : held.delete(k);
+  const b = document.querySelector(`#pad button[data-k="${k}"]`); if (b) b.classList.toggle('held', on);
+}
+document.querySelectorAll('#pad button').forEach((b) => {
+  const k = b.dataset.k;
+  b.addEventListener('pointerdown', (e) => { b.setPointerCapture(e.pointerId); press(k, true); });
+  b.addEventListener('pointerup', () => press(k, false));
+  b.addEventListener('pointercancel', () => press(k, false));
+});
+const KEYS = { ArrowUp: 'f', w: 'f', W: 'f', ArrowDown: 'b', s: 'b', S: 'b', ArrowLeft: 'l', a: 'l', A: 'l', ArrowRight: 'r', d: 'r', D: 'r' };
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT' && e.target.type !== 'range') return;
+  if (e.key === 'Escape') { estop(true); return; }
+  if (e.key === ' ') { e.preventDefault(); press('s'); return; }
+  const k = KEYS[e.key]; if (k) { e.preventDefault(); press(k, true); }
+});
+window.addEventListener('keyup', (e) => { const k = KEYS[e.key]; if (k) press(k, false); });
+window.addEventListener('blur', () => { held.clear(); document.querySelectorAll('#pad button').forEach(b => b.classList.remove('held')); });
+
+let estopOn = false;
+function estop(on) { post('/api/estop', { on }); }
+$('btnEstop').onclick = () => estop(!estopOn);
+document.querySelectorAll('#modes button').forEach((b) => { b.onclick = () => post('/api/mode', { mode: b.dataset.mode }); });
+
+// ---------------------------------------------------------------- status polling
+const fmt = (v, d = 2) => (v === null || v === undefined) ? '-' : v.toFixed(d);
+function setBar(id, txtId, d) {
+  const cap = 1.5, ok = d === null || d === undefined;
+  $(txtId).textContent = ok ? 'clear' : d.toFixed(2) + ' m';
+  const f = ok ? 1 : Math.max(0, Math.min(1, d / cap));
+  const el = $(id); el.style.width = (f * 100) + '%';
+  el.style.background = f < .25 ? css('--bad') : f < .5 ? css('--warn') : css('--ok');
+}
+async function poll() {
+  try {
+    const r = await fetch('/api/state?v=' + mapVersion, { cache: 'no-store' });
+    const s = await r.json();
+    lastOk = Date.now();
+    if (s.map) { mapInfo = s.map; mapRaw = atob(s.map.data); mapImg = buildMapImage(s.map); mapVersion = s.map_version; }
+    pose = s.pose; scan = s.scan || [];
+    if (pose) {
+      const last = trail[trail.length - 1];
+      if (!last || Math.hypot(last[0] - pose.x, last[1] - pose.y) > 0.03) trail.push([pose.x, pose.y]);
+      if (trail.length > 3000) trail.shift();
+      if ($('follow').checked) { view.cx = pose.x; view.cy = pose.y; }
+    }
+    if (s.goal && !goal) goal = s.goal;
+    const st = s.state || {}, hl = s.health || {}, base = hl.base || {}, pi = hl.pi || {};
+    estopOn = !!st.estop;
+    $('btnEstop').textContent = estopOn ? 'E-STOP ACTIVE — click to release' : 'EMERGENCY STOP (Esc)';
+    $('btnEstop').classList.toggle('active', estopOn);
+    document.querySelectorAll('#modes button').forEach(b => b.classList.toggle('on', b.dataset.mode === st.mode));
+    $('sMode').textContent = st.mode || '-';
+    $('sOut').textContent = st.v === undefined ? '-' : `${fmt(st.v)} m/s, ${fmt(st.w)} rad/s`;
+    $('sReason').textContent = st.reason || '-';
+    $('sScan').textContent = hl.scan_hz !== undefined ? `${hl.scan_hz} Hz` : '-';
+    $('sMega').textContent = base.connected === undefined ? '-' : (base.connected ? 'connected' : 'LINK LOST');
+    $('sOdo').textContent = base.odometry || '-';
+    $('sPi').textContent = pi.temp_c ? `${pi.temp_c.toFixed(0)} °C, ${fmt(pi.mem_free_mb, 0)} MB free` : '-';
+    $('sPose').textContent = pose ? `${fmt(pose.x)}, ${fmt(pose.y)} m, ${(pose.yaw * 180 / Math.PI).toFixed(0)}°` : 'no map→base_link yet';
+    setBar('bF', 'dF', st.front); setBar('bB', 'dB', st.rear);
+    $('problems').innerHTML = '';
+    (hl.problems || []).forEach((p) => { const li = document.createElement('li'); li.textContent = p; $('problems').appendChild(li); });
+    const robotAlive = s.state_age !== null && s.state_age < 2;
+    const lvl = !robotAlive ? 'bad' : hl.level === 'error' ? 'bad' : (hl.level === 'warn' || hl.level === 'starting') ? 'warn' : 'ok';
+    $('linkDot').className = 'dot ' + lvl;
+    $('linkTxt').textContent = robotAlive ? (hl.level || 'ok') : 'robot silent';
+    $('banner').style.display = robotAlive ? 'none' : 'block';
+  } catch (e) {
+    $('linkDot').className = 'dot bad'; $('linkTxt').textContent = 'panel server unreachable';
+    $('banner').style.display = 'block';
+  }
+  setTimeout(poll, 200);
+}
+poll(); draw();
+</script>
+</body>
+</html>

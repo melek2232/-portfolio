@@ -1,0 +1,28 @@
+# Parameters of the base node (Raspberry Pi -> Arduino Mega -> H-bridge -> motors).
+# Everything can also be overridden on the command line: ... --ros-args -p invert_left:=true
+base_node:
+  ros__parameters:
+    # ---- Arduino Mega link (set by the launch arguments backend:= and serial_port:=)
+    serial_baud: 115200
+    serial_boot_wait: 2.0
+
+    # ---- motors
+    invert_left: false          # true if the LEFT side drives backwards for a forward command
+    invert_right: false
+    wheel_separation: 0.1471    # m, between the left and right wheels  (measure yours)
+    max_wheel_speed: 0.30       # m/s at 100 % PWM: measure and adjust (see README, calibration)
+    min_duty: 0.25              # raise it if the motors hum without turning
+    max_linear: 0.20            # m/s
+    max_angular: 1.5            # rad/s
+    max_accel: 0.6
+    max_ang_accel: 4.0
+    cmd_timeout: 0.5
+
+    # ---- odometry
+    linear_scale: 1.0           # distance calibration
+    angular_scale: 1.0          # rotation calibration (skid-steer usually needs < 1)
+    use_encoders: false         # true once encoders are wired AND the firmware has ENCODERS 1
+    ticks_per_meter_left: 1000.0     # measure: ticks counted over 1 m of travel
+    ticks_per_meter_right: 1000.0
+    encoder_invert_left: false       # true if ticks decrease when the robot goes forward
+    encoder_invert_right: false

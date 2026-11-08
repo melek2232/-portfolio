@@ -1,0 +1,31 @@
+# Parameters of the v2 safety / filtering / monitoring nodes (bringup.launch.py).
+# The motor parameters stay in base.yaml.
+scan_filter:
+  ros__parameters:
+    range_min: 0.12
+    range_max: 8.0          # YDLIDAR X2: 8 m
+    despeckle: true         # remove isolated points (ghost obstacles, blurry walls)
+    win_angle: 0.04         # rad: neighbourhood searched for a similar distance
+    tol_abs: 0.06           # m
+    tol_rel: 0.04           # fraction of the distance
+
+cmd_mux:
+  ros__parameters:
+    source_timeout: 0.5     # s: a source silent for longer is ignored (dead-man)
+    scan_timeout: 1.0       # s: lidar silent for longer -> the robot does not move
+    block_when_blind: true
+    # body geometry seen from the lidar (measure yours)
+    front_offset: 0.205     # lidar -> front of the body, m
+    rear_offset: 0.081      # lidar -> rear of the body, m
+    half_width: 0.075
+    side_margin: 0.05
+    stop_distance: 0.10     # m between the body and an obstacle: forward motion blocked
+    slow_distance: 0.45     # m: speed decreases linearly down to stop_distance
+    max_linear: 0.20        # m/s
+    max_angular: 1.2        # rad/s
+
+map_autosave:
+  ros__parameters:
+    interval_s: 180.0
+    directory: ~/maps/autosave
+    keep: 10
