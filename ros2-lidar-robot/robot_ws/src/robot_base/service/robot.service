@@ -1,0 +1,17 @@
+[Unit]
+Description=Robot bring-up (ROS 2: lidar, SLAM, safety, motors)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=__DIR__
+Environment=MODE=stop
+ExecStart=/bin/bash __DIR__/run_robot.sh
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGINT
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target

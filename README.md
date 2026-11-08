@@ -22,10 +22,10 @@ and the code that can be tested without hardware has automated tests.
 <table>
   <tr>
     <td width="50%" valign="top">
-      <a href="https://github.com/melek2232/ros2-lidar-robot"><img src="assets/card-robot.png" alt="Robot control panel"></a>
-      <h3>🤖 <a href="https://github.com/melek2232/ros2-lidar-robot">ROS 2 lidar robot</a></h3>
-      <p>Raspberry Pi 5 + Arduino Mega + YDLIDAR X2. SLAM mapping, PC web panel, autonomous exploration and a safety layer between every command and the motors.</p>
-      <p><sub>ROS 2 Jazzy · slam_toolbox · Nav2 · Python · C++ · Arduino · Docker<br>Screenshot: simulation. Tested offline; hardware validation in progress.</sub></p>
+      <a href="ros2-lidar-robot/README.md"><img src="assets/card-robot.jpg" alt="The robot with its YDLIDAR X2"></a>
+      <h3>🤖 <a href="ros2-lidar-robot/README.md">ROS 2 lidar robot</a></h3>
+      <p>Raspberry Pi 5 + Arduino Mega + YDLIDAR X2. Live SLAM mapping, PC web panel, autonomous exploration and a safety layer between every command and the motors.</p>
+      <p><sub>ROS 2 Jazzy · slam_toolbox · Nav2 · Python · C++ · Arduino · Docker<br>Running on the real robot; offline test suite in CI.</sub></p>
     </td>
     <td width="50%" valign="top">
       <a href="inventory-cart-rpi-yolo/README.md"><img src="assets/card-cart.png" alt="Inventory cart CAD"></a>
