@@ -49,3 +49,21 @@ dist = sum(math.hypot(xs[i+1]-xs[i], ys[i+1]-ys[i]) for i in range(len(xs)-1))
 assert dist > 5, dist
 assert max(map(abs, xs)) < 4.2 and max(map(abs, ys)) < 4.2     # stays inside the room
 print(f'PASS fake_robot: 120 s, {dist:.1f} m driven, {fin}/360 valid beams, stays in the room')
+truths = [m for t, m in sent if t == '/ground_truth']
+assert len(truths) == 1200 and truths[-1].pose.pose.position.x == xs[-1]   # truth mode: odom == truth
+
+# open_loop: the estimate drifts away from the truth when the wheels slip
+def run(mode, slip_v, slip_w, seconds=60):
+    sent.clear()
+    Node.declare_parameter = lambda s, k, v: s.p.__setitem__(k, {'odom_mode': mode, 'slip_linear': slip_v,
+                                                                 'slip_angular': slip_w}.get(k, v))
+    r = fake_robot.FakeRobot()
+    for _ in range(int(seconds * 10)): r.cb()
+    return r, [m for t, m in sent if t == '/odom'], [m for t, m in sent if t == '/ground_truth']
+r, od, gt = run('open_loop', 0.9, 0.8)
+err = math.hypot(od[-1].pose.pose.position.x - gt[-1].pose.pose.position.x,
+                 od[-1].pose.pose.position.y - gt[-1].pose.pose.position.y)
+assert len(od) == len(gt) == 600 and err > 0.2, err
+r, od, gt = run('none', 0.9, 0.8)
+assert not od and len(gt) == 600 and not [m for t, m in sent if t == 'tf']
+print(f'PASS fake_robot modes: open_loop drifts {err:.2f} m in 60 s with slip 0.9/0.8; none publishes no odom/TF')

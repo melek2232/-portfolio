@@ -5,6 +5,8 @@ cd "$(dirname "$0")"
 echo "== Mega firmware (compiled with PC stand-ins)";   firmware/host_test/run_tests.sh
 echo "== Pi serial link <-> simulated Mega";            python3 -I src/robot_base/test/test_serial_e2e.py | tail -3
 echo "== base node (ROS replaced by stand-ins)";        python3 -I src/robot_base/test/test_base_node_smoke.py | tail -2
+echo "== Nav2 parameters + odometry selection (lidar / wheels)"
+python3 -I src/robot_base/test/test_nav2_odom_config.py | tail -4
 echo "== motor / odometry maths"
 python3 -I - <<'PY'
 import sys, importlib.util

@@ -5,7 +5,8 @@
         -> cmd_mux (mode, e-stop, obstacle stop) -> /cmd_vel_safe -> base_node -> Arduino Mega
 
   ros2 launch robot_base bringup.launch.py                       # starts in 'manual': nothing moves by itself
-  Arguments: nav:=true (Nav2 click-to-go), initial_mode:=stop|manual|explore|nav, explore_speed:=0.12,
+  Arguments: nav:=true (Nav2 click-to-go), odom:=lidar|wheels (default lidar: rf2o, no encoders needed),
+             initial_mode:=stop|manual|explore|nav, explore_speed:=0.12,
              lidar_yaw:=3.14159, backend:=dry_run (no motors), rviz:=true, autosave:=false
 Change the mode / stop from the PC:  pc/mode.sh manual|explore|nav|stop      pc/estop.sh
 """
@@ -20,6 +21,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+from robot_base import odom_select
 from robot_base.nav2_params import build
 
 
@@ -35,7 +37,8 @@ def _setup(context):
         launch_arguments={'lidar': lc('lidar'), 'port': lc('port'), 'backend': lc('backend'),
                           'serial_port': lc('serial_port'), 'lidar_x': lc('lidar_x'),
                           'lidar_z': lc('lidar_z'), 'lidar_yaw': lc('lidar_yaw'),
-                          'cmd_vel_topic': '/cmd_vel_safe'}.items()))
+                          'cmd_vel_topic': '/cmd_vel_safe', 'odom': lc('odom'),
+                          'odom_scan_topic': '/scan_filtered'}.items()))
 
     actions.append(Node(package='robot_base', executable='scan_filter', name='scan_filter',
                         output='screen', parameters=[cfg]))
@@ -57,8 +60,11 @@ def _setup(context):
 
     if lc('nav').perform(context).lower() == 'true':
         nav2 = get_package_share_directory('nav2_bringup')
-        params = build(os.path.join(nav2, 'params', 'nav2_params.yaml'),
-                       os.path.join(base, 'config', 'nav2_overrides.yaml'),
+        mode, _ = odom_select.resolve(lc('odom').perform(context), odom_select.rf2o_installed())
+        overlays = [os.path.join(base, 'config', 'nav2_overrides.yaml')]
+        if mode == 'lidar':
+            overlays.append(os.path.join(base, 'config', 'nav2_lidar_odom.yaml'))
+        params = build(os.path.join(nav2, 'params', 'nav2_params.yaml'), overlays,
                        os.path.join(tempfile.gettempdir(), 'robot_nav2_params.yaml'))
         # Nav2 planner/controller on top of the live SLAM map (no AMCL, no saved map needed)
         actions.append(IncludeLaunchDescription(
@@ -84,6 +90,7 @@ def generate_launch_description():
         DeclareLaunchArgument('initial_mode', default_value='manual'),
         DeclareLaunchArgument('explore_speed', default_value='0.12'),
         DeclareLaunchArgument('nav', default_value='false'),
+        DeclareLaunchArgument('odom', default_value='lidar', description='lidar (rf2o) | wheels'),
         DeclareLaunchArgument('autosave', default_value='true'),
         DeclareLaunchArgument('rviz', default_value='false'),
         OpaqueFunction(function=_setup),

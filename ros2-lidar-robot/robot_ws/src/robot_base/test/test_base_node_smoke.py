@@ -191,6 +191,23 @@ n.motors.ticks = lambda: None
 n.tick()
 check('no encoder data -> velocity 0, no crash', n.odo_v == 0.0)
 
+# ---------- odom:=lidar (robot.launch.py): rf2o owns /odom + TF, base_node only drives the motors
+from robot_base import odom_select  # noqa: E402
+Clock.ns = 10**9
+n = make(**odom_select.base_node_params('lidar'))
+n.motors = Recorder()
+n.tick()
+drive(n, 0.10, 0.0, 1.0)
+check('lidar mode: wheel estimate on /odom_wheels, nothing on /odom',
+      '/odom' not in n.pubs and len(n.pubs['/odom_wheels'].sent) > 30)
+check('lidar mode: no odom -> base_link TF from base_node', len(n.tf_pub.sent) == 0)
+check('lidar mode: motors still driven', n.motors.calls[-1][0] > 0.3)
+n.publish_status()
+check("lidar mode: /base_status says odometry 'lidar'",
+      '"odometry": "lidar"' in n.status_pub.sent[-1].data, n.status_pub.sent[-1].data)
+n = make(**odom_select.base_node_params('wheels'))
+check('wheels mode: /odom + TF as before', '/odom' in n.pubs and n.params['publish_tf'] is True)
+
 # ---------- unknown backend
 try:
     make(backend='banana')

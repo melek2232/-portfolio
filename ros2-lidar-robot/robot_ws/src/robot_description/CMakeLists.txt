@@ -10,7 +10,7 @@ install(
 
 install(
   PROGRAMS scripts/wander.py scripts/scan_relay.py scripts/fake_robot.py scripts/save_map.sh
-  tools/offline_check.py tools/make_truth_map.py
+  tools/offline_check.py tools/make_truth_map.py tools/eval_odom.py tools/nav_goals.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
