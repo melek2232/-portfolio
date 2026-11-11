@@ -55,7 +55,12 @@ and the code that can be tested without hardware has automated tests.
       <p>Arduino Nano 33 BLE Sense → BLE → Raspberry Pi gateway → Mosquitto → Node-RED dashboard. Motion, temperature, humidity and pressure at 1 Hz, with 70 minutes of logged data.</p>
       <p><sub>MQTT · Mosquitto · BLE · Node-RED · Python (bleak, paho) · Arduino</sub></p>
     </td>
-    <td width="50%" valign="top"></td>
+    <td width="50%" valign="top">
+      <a href="ros2-system-builder/README.md"><img src="assets/card-builder.png" alt="ROS 2 System Builder editor with a PLC station example"></a>
+      <h3>🧩 <a href="ros2-system-builder/README.md">ROS 2 System Builder</a> <sub>🚧 in development</sub></h3>
+      <p>No-code graphical tool: draw nodes, topics, services and actions, then download a ready-to-build ROS 2 workspace for a Raspberry Pi. Industrial drivers (Modbus, CAN, MQTT) and custom message types.</p>
+      <p><sub>ROS 2 · rclpy · rosidl · JavaScript · Bash · Modbus · CAN · MQTT<br>Tested on real ROS 2 Jazzy; hardware validation in progress. <a href="https://github.com/melek2232/ros2-system-builder">Source repository</a></sub></p>
+    </td>
   </tr>
 </table>
 
