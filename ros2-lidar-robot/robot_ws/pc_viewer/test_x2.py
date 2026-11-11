@@ -22,13 +22,16 @@ print('parser ok: 3 turns, 360 points each, ranges within 1 cm')
 
 # live mode through a virtual serial port
 m, sl = pty.openpty(); port = os.ttyname(sl)
+done = threading.Event()
 def writer():
-    for _ in range(40):
+    # stream until the viewer exits: a fixed burst could end before a slow runner has started viewer.py
+    while not done.is_set():
         os.write(m, fake_turns(1, lambda d: 3.0)); time.sleep(0.05)
 threading.Thread(target=writer, daemon=True).start()
 out = subprocess.run([sys.executable, os.path.join(os.path.dirname(__file__), 'viewer.py'), 'live', port,
                       '--save', '/tmp/live.png', '--seconds', '2', '--csv', '/tmp/live.csv'],
                      capture_output=True, text=True, timeout=60)
+done.set()
 print(out.stdout.strip(), out.stderr[-300:])
 assert 'saved' in out.stdout and os.path.getsize('/tmp/live.csv') > 1000
 print('live mode ok (csv written)')
