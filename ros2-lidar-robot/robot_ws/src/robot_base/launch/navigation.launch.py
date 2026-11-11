@@ -14,6 +14,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
+from robot_base import odom_select
 from robot_base.nav2_params import build
 
 
@@ -24,8 +25,12 @@ def _setup(context):
     if not os.path.isfile(map_file):
         raise RuntimeError(f'Map file not found: {map_file}  (save one with save_map.sh first)')
 
-    params = build(os.path.join(nav2, 'params', 'nav2_params.yaml'),
-                   os.path.join(base, 'config', 'nav2_overrides.yaml'),
+    mode, _ = odom_select.resolve(LaunchConfiguration('odom').perform(context),
+                                  odom_select.rf2o_installed())
+    overlays = [os.path.join(base, 'config', 'nav2_overrides.yaml')]
+    if mode == 'lidar':
+        overlays.append(os.path.join(base, 'config', 'nav2_lidar_odom.yaml'))
+    params = build(os.path.join(nav2, 'params', 'nav2_params.yaml'), overlays,
                    os.path.join(tempfile.gettempdir(), 'robot_nav2_params.yaml'))
 
     robot = IncludeLaunchDescription(
@@ -36,7 +41,8 @@ def _setup(context):
                           'serial_port': LaunchConfiguration('serial_port'),
                           'lidar_x': LaunchConfiguration('lidar_x'),
                           'lidar_z': LaunchConfiguration('lidar_z'),
-                          'lidar_yaw': LaunchConfiguration('lidar_yaw')}.items())
+                          'lidar_yaw': LaunchConfiguration('lidar_yaw'),
+                          'odom': LaunchConfiguration('odom')}.items())
 
     bringup = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(nav2, 'launch', 'bringup_launch.py')),
@@ -62,6 +68,7 @@ def generate_launch_description():
         DeclareLaunchArgument('lidar_x', default_value='-0.068'),
         DeclareLaunchArgument('lidar_z', default_value='0.12'),
         DeclareLaunchArgument('lidar_yaw', default_value='0.0'),
+        DeclareLaunchArgument('odom', default_value='lidar', description='lidar (rf2o) | wheels'),
         DeclareLaunchArgument('rviz', default_value='true'),
         OpaqueFunction(function=_setup),
     ])

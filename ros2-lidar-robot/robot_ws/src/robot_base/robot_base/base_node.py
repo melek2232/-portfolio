@@ -61,6 +61,8 @@ class BaseNode(Node):
         d('odom_frame', 'odom')
         d('base_frame', 'base_link')
         d('publish_tf', True)
+        d('odom_topic', '/odom')                 # robot.launch.py odom:=lidar -> /odom_wheels (rf2o owns /odom)
+        d('odom_source', '')                     # label in /base_status; '' = encoders | open_loop
 
         self.sep = float(self.p('wheel_separation'))
         self.max_speed = float(self.p('max_wheel_speed'))
@@ -98,20 +100,23 @@ class BaseNode(Node):
         self.create_subscription(Twist, str(self.p('cmd_vel_topic')), self.on_cmd, 10)
         self.status_pub = self.create_publisher(String, '/base_status', 10)
         self.create_timer(0.5, self.publish_status)
-        self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
+        self.odom_pub = self.create_publisher(Odometry, str(self.p('odom_topic')), 10)
         self.tf_pub = TransformBroadcaster(self)
         self.create_timer(1.0 / float(self.p('loop_hz')), self.tick)
-        self.get_logger().info(f'base_node ready (backend={backend}, '
-                               f'odometry={"encoders" if self.use_enc else "open loop"})')
+        self.get_logger().info(f'base_node ready (backend={backend}, odometry={self.odom_label()}, '
+                               f'{self.p("odom_topic")}, tf={"on" if self.p("publish_tf") else "off"})')
 
     def p(self, name):
         return self.get_parameter(name).value
+
+    def odom_label(self):
+        return str(self.p('odom_source')) or ('encoders' if self.use_enc else 'open_loop')
 
     def publish_status(self):
         self.status_pub.publish(String(data=json.dumps(dict(
             backend=str(self.p('backend')),
             connected=bool(getattr(self.motors, 'connected', True)),
-            odometry='encoders' if self.use_enc else 'open_loop',
+            odometry=self.odom_label(),
             v=round(self.odo_v, 3), w=round(self.odo_w, 3)))))
 
     def on_cmd(self, msg: Twist):

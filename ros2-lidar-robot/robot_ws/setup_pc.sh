@@ -15,12 +15,14 @@ sudo apt update
 sudo apt install -y "ros-$DISTRO-navigation2" "ros-$DISTRO-nav2-bringup" \
   "ros-$DISTRO-slam-toolbox" "ros-$DISTRO-robot-state-publisher" "ros-$DISTRO-rviz2" \
   "ros-$DISTRO-teleop-twist-keyboard" python3-colcon-common-extensions python3-yaml python3-numpy \
-  git cmake pkg-config build-essential
+  git cmake pkg-config build-essential libboost-dev libeigen3-dev
 
 # Gazebo bridge: optional (only for sim.launch.py; sim_lite.launch.py does not need it)
 sudo apt install -y "ros-$DISTRO-ros-gz" || echo ">> ros-$DISTRO-ros-gz not available: skip Gazebo, use sim_lite.launch.py"
 
-PKGS="robot_description"
+# simulation with lidar odometry (sim_lite.launch.py odom:=lidar) needs rf2o + robot_base (pure Python)
+./fetch_rf2o.sh
+PKGS="robot_description robot_base rf2o_laser_odometry"
 if [ "$1" != "--no-lidar" ]; then
   if ! ldconfig -p | grep -q ydlidar_sdk; then
     echo ">> Installing the YDLidar SDK (needed by the driver)"
@@ -34,7 +36,7 @@ if [ "$1" != "--no-lidar" ]; then
   fi
   sudo apt install -y python3-serial || true
   sudo usermod -aG dialout "$USER"
-  PKGS="robot_description ydlidar_ros2_driver robot_lidar robot_base"
+  PKGS="$PKGS ydlidar_ros2_driver robot_lidar"
 fi
 
 source "/opt/ros/$DISTRO/setup.bash"

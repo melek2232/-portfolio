@@ -14,7 +14,8 @@ sudo apt update
 sudo apt install -y "ros-$DISTRO-navigation2" "ros-$DISTRO-nav2-bringup" "ros-$DISTRO-slam-toolbox" \
   "ros-$DISTRO-teleop-twist-keyboard" "ros-$DISTRO-rviz2" "ros-$DISTRO-robot-state-publisher" \
   "ros-$DISTRO-tf2-ros" "ros-$DISTRO-tf2-tools" python3-serial python3-yaml python3-numpy \
-  python3-colcon-common-extensions python3-venv python3-pip git build-essential pkg-config
+  python3-colcon-common-extensions python3-venv python3-pip git build-essential pkg-config \
+  libboost-dev libeigen3-dev    # rf2o lidar odometry
 
 # YDLidar SDK (needs CMake < 4: built with a private CMake 3 from pip)
 if ! ldconfig -p | grep -q ydlidar_sdk; then
@@ -30,10 +31,13 @@ fi
 # serial ports of the lidar and the Mega
 sudo usermod -aG dialout "$USER"
 
+# lidar odometry (the robot has no encoders / IMU): rf2o, pinned version
+./fetch_rf2o.sh
+
 source "/opt/ros/$DISTRO/setup.bash"
 # one job at a time: the Pi can run out of memory while compiling
 MAKEFLAGS="-j2" colcon build --symlink-install --executor sequential --parallel-workers 1 \
-  --packages-select ydlidar_ros2_driver robot_lidar robot_base \
+  --packages-select ydlidar_ros2_driver robot_lidar robot_base rf2o_laser_odometry \
   --cmake-args -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 
 chmod +x run_robot.sh check_system.sh install_service.sh pc/*.sh firmware/tools/*.py src/robot_base/scripts/*.sh 2>/dev/null || true

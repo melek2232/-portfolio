@@ -1,0 +1,38 @@
+# Applied AFTER nav2_overrides.yaml when odom:=lidar (rf2o lidar odometry, no encoders / no IMU).
+#
+# Why these values:
+#  - Lidar odometry is much better than open loop when the wheels slip (AMCL can trust it more),
+#  - but it is computed from consecutive scans: the YDLIDAR X2 turns at ~7 Hz, so a fast spin
+#    moves the scene a lot between two scans and the match gets worse. Rotation speed and
+#    acceleration are kept low so the robot never turns more than ~5 degrees per scan.
+#  - Nav2 must never stop seeing the walls: if the lidar is blocked the odometry freezes, the
+#    progress checker then aborts the goal instead of driving blind.
+amcl:
+  ros__parameters:
+    alpha1: 0.10        # rotation noise from rotation
+    alpha2: 0.10        # rotation noise from translation
+    alpha3: 0.10        # translation noise from translation
+    alpha4: 0.10        # translation noise from rotation
+    update_min_d: 0.10
+    update_min_a: 0.15
+
+controller_server:
+  ros__parameters:
+    progress_checker:
+      required_movement_radius: 0.15
+      movement_time_allowance: 15.0
+    FollowPath:                  # Regulated Pure Pursuit (nav2_overrides.yaml)
+      rotate_to_heading_angular_vel: 0.5
+      max_angular_accel: 1.0
+
+behavior_server:
+  ros__parameters:
+    max_rotational_vel: 0.6
+    rotational_acc_lim: 1.0
+
+velocity_smoother:
+  ros__parameters:
+    max_velocity: [0.15, 0.0, 0.6]
+    min_velocity: [-0.15, 0.0, -0.6]
+    max_accel: [0.4, 0.0, 1.0]
+    max_decel: [-0.5, 0.0, -1.0]

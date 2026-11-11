@@ -23,7 +23,8 @@ def generate_launch_description():
                           'serial_port': LaunchConfiguration('serial_port'),
                           'lidar_x': LaunchConfiguration('lidar_x'),
                           'lidar_z': LaunchConfiguration('lidar_z'),
-                          'lidar_yaw': LaunchConfiguration('lidar_yaw')}.items())
+                          'lidar_yaw': LaunchConfiguration('lidar_yaw'),
+                          'odom': LaunchConfiguration('odom')}.items())
 
     def make_slam(context):
         # no motors (dry_run) = no odometry: let the scan matcher process every scan
@@ -58,6 +59,7 @@ def generate_launch_description():
         DeclareLaunchArgument('lidar_x', default_value='-0.068'),
         DeclareLaunchArgument('lidar_z', default_value='0.12'),
         DeclareLaunchArgument('lidar_yaw', default_value='0.0'),
+        DeclareLaunchArgument('odom', default_value='lidar', description='lidar (rf2o) | wheels'),
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument('explore', default_value='false',
                               description='true = the robot discovers the room by itself'),

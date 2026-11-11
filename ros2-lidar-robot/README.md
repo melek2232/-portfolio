@@ -20,7 +20,8 @@ The robot has three jobs:
 2. **Build a map of the room** with SLAM (slam_toolbox).
 3. **Move on its own**, either by reactive exploration or by Nav2 navigation to a goal clicked on the map.
 
-It is designed around a small, low-cost robot with **no wheel encoders**, which is the main constraint on map quality.
+It is designed around a small, low-cost robot with **no wheel encoders and no IMU**. Its motion is estimated from the lidar
+itself (**lidar odometry**, rf2o), which is what makes Nav2 navigation usable without feedback sensors.
 
 <p align="center">
   <img src="images/web-panel.jpg" width="750" alt="Web control panel showing the live map, e-stop, modes and drive pad">
@@ -46,6 +47,7 @@ It is designed around a small, low-cost robot with **no wheel encoders**, which 
  ┌────────────────────────┐   RJ45 / Wi-Fi    ┌──────────────────────────────────────────┐
  │ web panel (browser):   │◄─────────────────►│ ydlidar driver ─► /scan ─► scan_filter ──┼─► slam_toolbox ─► /map
  │  map, lidar, drive,    │   ROS 2 / DDS     │                              │           │
+ │                        │                   │ rf2o odometry ─► /odom, TF ◄─┤           │
  │  modes, e-stop, goal   │   domain 42       │ PC panel (manual) ─┐         ▼           │
  └────────────────────────┘                   │ explorer (explore) ┼─► cmd_mux ─► base_node ─► USB ─► Arduino Mega
                                               │ Nav2 (nav)        ─┘  (mode, e-stop,     │            │ PWM
@@ -57,9 +59,9 @@ It is designed around a small, low-cost robot with **no wheel encoders**, which 
 | Layer | Contents | Role |
 |---|---|---|
 | Operator (PC) | Web panel, optional RViz | Shows the map, sends intent (mode, keys, goal). Never talks to the motors directly. |
-| Autonomy (Pi) | slam_toolbox, Nav2, explorer | Decides *what* to do: map, plan, wander. |
+| Autonomy (Pi) | rf2o, slam_toolbox, Nav2, explorer | Estimates motion from the lidar, maps, plans, wanders. |
 | Safety (Pi) | scan_filter, cmd_mux, health | Decides what is *allowed*: filters the lidar, limits commands, watches for failures. |
-| Base (Pi) | base_node, kinematics, motors | Turns velocity commands into wheel PWM and odometry. |
+| Base (Pi) | base_node, kinematics, motors | Turns velocity commands into wheel PWM (wheel odometry only as a fallback). |
 | Firmware (Mega) | `mega_motor_driver.ino` | Drives the pins, 400 ms watchdog. |
 
 ### Design principles
@@ -87,9 +89,27 @@ The rules are applied in this order, 20 times per second:
 
 ---
 
-## 🗺️ Mapping without wheel encoders
+## 🧭 Navigation without encoders or IMU: lidar odometry + Nav2
 
-The odometry is dead-reckoned from the commanded speeds, so it cannot see wheel slip. The map therefore relies on scan matching:
+Dead-reckoning from the commanded speeds cannot see wheel slip, so the robot would drift silently. Instead,
+**rf2o_laser_odometry** estimates the motion between consecutive lidar scans and publishes `odom -> base_link`;
+slam_toolbox corrects the long-term drift (`map -> odom`) and **Nav2** plans on the live map. The motors node only drives.
+
+Measured in simulation on ROS 2 Jazzy, with the wheels slipping 10 % forward and 20 % in rotation:
+
+| | open-loop odometry | lidar odometry (rf2o) |
+|---|---|---|
+| Odometry error after 9 m of exploring | 2.0 m (21 %) | **0.03 m (0.4 %)** |
+| Nav2, 6-goal tour incl. behind a wall unmapped at start | Nav2 reports 6/6, real error **1.31 m** on the last goal | **6/6, real error ≤ 0.13 m** |
+
+The simulation also caught three Nav2 configuration bugs that would have blocked click-to-go on the real robot
+(MPPI `model_dt` vs controller period, a missing `base_footprint` frame, MPPI crawling at this robot's low speed limit).
+They are fixed (Regulated Pure Pursuit controller, lighter on the Pi) and guarded by an offline test.
+Details and limits: [`robot_ws/README.md`](robot_ws/README.md#6-navigation-without-encoders-or-imu-lidar-odometry--nav2).
+
+### Mapping settings
+
+The map relies on scan matching:
 
 | Choice | Value | Why |
 |---|---|---|
@@ -115,8 +135,12 @@ The odometry is dead-reckoned from the commanded speeds, so it cannot see wheel 
 | Robot + safety + explorer in a simulated room | teleop into walls and 3 exploration runs | ✅ 0 collisions |
 | Explorer alone, 5 min simulated | coverage | ✅ 0 collisions, 90 % of the room seen |
 | Web panel in a real browser | drawing, buttons, keys, token and Host checks | ✅ passed |
+| Nav2 parameters + odometry selection | overlays merged onto Jazzy's real defaults; lidar / wheels switch | ✅ passed |
+| Simulator odometry modes | truth / open-loop with slip / external (rf2o) | ✅ passed |
 
-On the real robot, the lidar, the Mega link, the web panel and live mapping run (photos above). Still to do on the hardware: motor calibration, Nav2 click-to-go tuning, and mapping a full room with loop closure.
+In simulation on real ROS 2 Jazzy (`sim_lite`, not in CI): rf2o + slam_toolbox + Nav2 with the robot's parameters, results above.
+
+On the real robot, the lidar, the Mega link, the web panel and live mapping run (photos above). Still to do on the hardware: motor calibration, lidar odometry + Nav2 click-to-go on the real X2 scans, and mapping a full room with loop closure.
 
 ---
 
@@ -140,7 +164,8 @@ cd robot_ws && ./setup_pi.sh
 ## ⚠️ Limitations and next steps
 
 - [ ] **Not a certified safety system**: the e-stop is software. A physical switch on the motor battery is required.
-- [ ] **Wheel encoders**: the firmware and ROS side already support them; the single best upgrade for map quality.
+- [x] **Lidar odometry (rf2o) + Nav2** without encoders or IMU (validated in simulation, hardware test pending).
+- [ ] **Wheel encoders**: the firmware and ROS side already support them; would back up the lidar odometry in featureless areas.
 - [ ] **IMU** (MPU-6050 / BNO055) fused with `robot_localization` for a reliable heading.
 - [ ] **Frontier exploration** instead of the reactive wanderer, for full room coverage.
 - [ ] **Closed-loop PID** speed control on the Mega.
@@ -156,13 +181,14 @@ ros2-lidar-robot/
 ├── images/
 └── robot_ws/
     ├── README.md                 # operating manual
-    ├── run_robot.sh  setup_pi.sh  check_system.sh  run_all_tests.sh
+    ├── run_robot.sh  setup_pi.sh  check_system.sh  run_all_tests.sh  fetch_rf2o.sh
     ├── firmware/mega_motor_driver/   # Arduino Mega sketch + host tests
     ├── src/
-    │   ├── robot_base/           # cmd_mux, scan_filter, explore, base_node, health, map_autosave
+    │   ├── robot_base/           # cmd_mux, scan_filter, explore, base_node, health, map_autosave,
+    │   │                         #   lidar odometry launch, Nav2 overlays
     │   ├── robot_lidar/          # lidar launch and config
     │   ├── ydlidar_ros2_driver/  # YDLIDAR driver (third party, see its LICENSE)
-    │   └── robot_description/    # URDF, simulation, offline tools
+    │   └── robot_description/    # URDF, simulation (odometry modes, ground truth), eval_odom, nav_goals
     ├── pc/                       # web panel, RViz, teleop, e-stop scripts (Docker)
     └── pc_viewer/                # lidar viewer without ROS
 ```
@@ -171,12 +197,13 @@ ros2-lidar-robot/
 
 ## 🛠️ Technologies
 
-`ROS 2 Jazzy` · `slam_toolbox` · `Nav2` · `Python` · `C++` · `Arduino` · `Docker` · `Raspberry Pi 5` · `YDLIDAR X2`
+`ROS 2 Jazzy` · `slam_toolbox` · `Nav2` · `rf2o lidar odometry` · `Python` · `C++` · `Arduino` · `Docker` · `Raspberry Pi 5` · `YDLIDAR X2`
 
 ## 📚 Skills developed
 
 - ROS 2 system design: nodes, topics, QoS, TF tree, lifecycle nodes, launch files
-- SLAM tuning for a robot without encoders
+- SLAM tuning and lidar odometry (rf2o) for a robot without encoders or IMU
+- Nav2 configuration: controller choice (RPP vs MPPI), costmaps, parameter overlays, validation against ground truth
 - Safety design for a mobile robot: command arbitration, watchdogs, obstacle stop
 - Differential-drive kinematics and odometry
 - Serial protocol and firmware for real-time motor control

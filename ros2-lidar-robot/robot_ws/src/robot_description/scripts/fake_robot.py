@@ -5,6 +5,13 @@ Publishes /scan (frame lidar_link), /odom, TF odom->base_link and /joint_states,
 real robot does, so slam_toolbox, Nav2 and RViz run unchanged.  It drives itself (the same explorer as
 Gazebo) or follows /cmd_vel (parameter auto:=false, drive with teleop_twist_keyboard).
 Needs only ROS 2 and numpy; no GPU, so it works in a virtual machine.
+
+Odometry modes (parameter odom_mode), to compare odometry sources against the truth:
+  truth      /odom + TF are the exact pose (ideal encoders)                       [default]
+  open_loop  /odom + TF integrate the COMMANDED speeds, like base_node without encoders,
+             while the robot really moves with wheel slip (slip_linear, slip_angular)
+  none       no /odom and no TF: another node provides them (lidar odometry, rf2o)
+The true pose is always published on /ground_truth (nav_msgs/Odometry, frame 'odom') for evaluation.
 """
 import math
 import os
@@ -34,6 +41,14 @@ class FakeRobot(Node):
         self.declare_parameter('auto', True)
         self.declare_parameter('noise', 0.01)         # lidar range noise, metres
         self.declare_parameter('seed', 1)
+        self.declare_parameter('odom_mode', 'truth')  # truth | open_loop | none
+        self.declare_parameter('slip_linear', 1.0)    # real distance / commanded distance
+        self.declare_parameter('slip_angular', 1.0)   # real rotation / commanded rotation (skid-steer < 1)
+        self.odom_mode = str(self.get_parameter('odom_mode').value)
+        if self.odom_mode not in ('truth', 'open_loop', 'none'):
+            raise ValueError(f"odom_mode must be truth, open_loop or none, not '{self.odom_mode}'")
+        self.slip_v = float(self.get_parameter('slip_linear').value)
+        self.slip_w = float(self.get_parameter('slip_angular').value)
         self.auto = self.get_parameter('auto').value
         self.noise = self.get_parameter('noise').value
         oc.WORLD = os.path.join(get_package_share_directory('robot_description'),
@@ -41,17 +56,20 @@ class FakeRobot(Node):
         self.occ, _ = oc.build_world()
         self.logic = oc.wander.Wanderer(rng=random.Random(self.get_parameter('seed').value))
         self.x = self.y = self.yaw = 0.0
+        self.ox = self.oy = self.oyaw = 0.0               # open-loop estimate (odom_mode open_loop)
         self.cmd = (0.0, 0.0)
         self.cmd_time = 0.0
         self.t = 0.0
         self.scan_pub = self.create_publisher(LaserScan, '/scan', qos_profile_sensor_data)
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
+        self.truth_pub = self.create_publisher(Odometry, '/ground_truth', 10)
         self.js_pub = self.create_publisher(JointState, '/joint_states', 10)
         self.tf = TransformBroadcaster(self)
         self.create_subscription(Twist, '/cmd_vel', self.on_cmd, 10)
         self.dt = 0.1
         self.create_timer(self.dt, self.step)
-        self.get_logger().info('fake_robot: simulated room, lidar on /scan, odometry on /odom')
+        self.get_logger().info(f'fake_robot: simulated room, lidar on /scan, odom_mode={self.odom_mode}, '
+                               f'slip={self.slip_v:.2f}/{self.slip_w:.2f}, truth on /ground_truth')
 
     def on_cmd(self, msg):
         self.cmd = (msg.linear.x, msg.angular.z)
@@ -67,6 +85,8 @@ class FakeRobot(Node):
                                    oc.R_MIN, oc.R_MAX, self.t)
         else:
             v, w = self.cmd if self.t - self.cmd_time < 0.5 else (0.0, 0.0)
+        cmd_v, cmd_w = v, w
+        v, w = v * self.slip_v, w * self.slip_w           # what the wheels really achieve
         nyaw = self.yaw + w * self.dt
         nx = self.x + v * math.cos(self.yaw) * self.dt
         ny = self.y + v * math.sin(self.yaw) * self.dt
@@ -74,6 +94,10 @@ class FakeRobot(Node):
             v = w = 0.0                                  # blocked by a wall
         else:
             self.x, self.y, self.yaw = nx, ny, nyaw
+        # open-loop estimate: integrates the commands, knows nothing about slip or walls (like base_node)
+        self.oyaw += cmd_w * self.dt
+        self.ox += cmd_v * math.cos(self.oyaw) * self.dt
+        self.oy += cmd_v * math.sin(self.oyaw) * self.dt
         self.t += self.dt
         now = self.get_clock().now().to_msg()
 
@@ -90,34 +114,44 @@ class FakeRobot(Node):
         scan.ranges = [float(r) if oc.R_MIN <= r <= oc.R_MAX else float('inf') for r in rng]
         self.scan_pub.publish(scan)
 
-        qz, qw = math.sin(self.yaw / 2), math.cos(self.yaw / 2)
-        tf = TransformStamped()
-        tf.header.stamp = now
-        tf.header.frame_id = 'odom'
-        tf.child_frame_id = 'base_link'
-        tf.transform.translation.x = self.x
-        tf.transform.translation.y = self.y
-        tf.transform.rotation.z = qz
-        tf.transform.rotation.w = qw
-        self.tf.sendTransform(tf)
-
-        od = Odometry()
-        od.header.stamp = now
-        od.header.frame_id = 'odom'
-        od.child_frame_id = 'base_link'
-        od.pose.pose.position.x = self.x
-        od.pose.pose.position.y = self.y
-        od.pose.pose.orientation.z = qz
-        od.pose.pose.orientation.w = qw
-        od.twist.twist.linear.x = v
-        od.twist.twist.angular.z = w
-        self.odom_pub.publish(od)
+        self.truth_pub.publish(self.odometry(now, self.x, self.y, self.yaw, v, w))
+        if self.odom_mode != 'none':
+            if self.odom_mode == 'open_loop':
+                ex, ey, eyaw, ev, ew = self.ox, self.oy, self.oyaw, cmd_v, cmd_w
+            else:
+                ex, ey, eyaw, ev, ew = self.x, self.y, self.yaw, v, w
+            qz, qw = math.sin(eyaw / 2), math.cos(eyaw / 2)
+            tf = TransformStamped()
+            tf.header.stamp = now
+            tf.header.frame_id = 'odom'
+            tf.child_frame_id = 'base_link'
+            tf.transform.translation.x = ex
+            tf.transform.translation.y = ey
+            tf.transform.rotation.z = qz
+            tf.transform.rotation.w = qw
+            self.tf.sendTransform(tf)
+            self.odom_pub.publish(self.odometry(now, ex, ey, eyaw, ev, ew))
 
         js = JointState()
         js.header.stamp = now
         js.name = WHEELS
         js.position = [0.0] * len(WHEELS)
         self.js_pub.publish(js)
+
+
+    @staticmethod
+    def odometry(stamp, x, y, yaw, v, w):
+        od = Odometry()
+        od.header.stamp = stamp
+        od.header.frame_id = 'odom'
+        od.child_frame_id = 'base_link'
+        od.pose.pose.position.x = x
+        od.pose.pose.position.y = y
+        od.pose.pose.orientation.z = math.sin(yaw / 2)
+        od.pose.pose.orientation.w = math.cos(yaw / 2)
+        od.twist.twist.linear.x = v
+        od.twist.twist.angular.z = w
+        return od
 
 
 def main():
